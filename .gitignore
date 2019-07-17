@@ -1,0 +1,6 @@
+
+DATA/
+
+Notebooks/\.ipynb_checkpoints/
+
+*.npy
