@@ -24,4 +24,4 @@ def run(path, output_dir = ''):
 		with open(output_dir + output_filename, 'w') as f:
 			pickle.dump([lwp, cod, cloud_mask, latitude, longitude, dt], f)
 		return
-run('./temp/')
+
