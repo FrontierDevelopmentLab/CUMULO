@@ -3,11 +3,13 @@ from pyhdf.SD import SD, SDC
 import pyhdf.HDF as HDF
 import glob
 import pickle
-import matplotlib.pyplot as plt
+import datetime
 
 def run(path, output_dir = ''):
 	for filename in glob.glob(path + '*MYD*.hdf'):
 		output_filename = filename.split('A')[1].split('.')
+		dt = datetime.datetime(year = int(output_filename[0][:4]), month = 1, day = 1, hour = int(output_filename[1][:2]), minute = int(output_filename[1][2:]) )
+		dt = dt + datetime.timedelta(days = int(output_filename[0][4:])-1)
 		output_filename = '{}{}.pkl'.format(output_filename[0], output_filename[1])
 		level_data = SD(filename, SDC.READ)
 		latitude = level_data.select('Latitude').get()
@@ -20,6 +22,6 @@ def run(path, output_dir = ''):
 		cod = cod[:1350]
 		cloud_mask = level_data.select('Cloud_Mask_1km').get()[:,:1350,:]
 		with open(output_dir + output_filename, 'w') as f:
-			pickle.dump([lwp, cod, cloud_mask, latitude, longitude], f)
+			pickle.dump([lwp, cod, cloud_mask, latitude, longitude, dt], f)
 		return
 run('./temp/')
