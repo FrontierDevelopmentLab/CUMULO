@@ -6,7 +6,7 @@ def create_modis_for_dirs(source_dir, save_dir):
     modis_paths = []
     for root, dirs, files in os.walk(source_dir):
         for file in files:
-            modis_paths.append(os.path.join(root, file))
+            modis_paths.append("{}/{}".format(root, file))
 
     source_dirs = set()
     for path in modis_paths:
