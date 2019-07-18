@@ -4,9 +4,6 @@ import random
 import os
 
 
-def process_directory(file_directory, payload_path, metadata_path, tile_size=3):
-
-
 def random_tile_extract_from_file(file_in, payload_path, metadata_path, tile_size=3):
     filename = file_in.split("/")[-1]
     filename = filename[:-4]
@@ -28,7 +25,10 @@ def random_tile_extract_from_file(file_in, payload_path, metadata_path, tile_siz
         tiles_in_band = []
         metadata_in_band = []
 
-        random_horizontal_pixel = random.randint(offset+1, swath_breadth-(offset+1))
+        random_range = random.choice([(offset+1, (swath_breadth//2)-1),
+                                      ((swath_breadth//2)+1,  swath_breadth-(offset+1))])
+
+        random_horizontal_pixel = random.randint(*random_range)
 
         for band in range(swath_bands):
 
