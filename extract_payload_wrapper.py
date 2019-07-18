@@ -2,7 +2,7 @@ import extract_payload
 import os
 
 
-def extract_payload_for_dirs(source_dir, payload_path, metadata_path, tile_size)
+def extract_payload_for_dirs(source_dir, payload_path, metadata_path, tile_size):
 
     paths = []
     for roots, dirs, files in os.walk(source_dir):
