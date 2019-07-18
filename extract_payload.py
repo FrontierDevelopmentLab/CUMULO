@@ -47,7 +47,7 @@ def random_tile_extract_from_file(file_in, payload_path, metadata_path, tile_siz
         metadata.append(metadata_in_band)
 
     payload_array = np.stack(payload)
-    payload_array = np.transpose(payload_array, (1, 0, 2, 3))
+    #payload_array = np.transpose(payload_array, (1, 0, 2, 3))
 
     payload_path = os.path.join(payload_path, "payload_{}".format(filename))
     metadata_path = os.path.join(metadata_path, "metadata_{}".format(filename))
