@@ -8,7 +8,7 @@ def random_tile_extract_from_file(file_in, payload_path, metadata_path, tile_siz
     filename = file_in.split("/")[-1]
     filename = filename[:-4]
 
-    swath_array = pd.read_pickle(file_in)
+    swath_array = pd.read_pickle(file_in),
 
     swath_bands, swath_length, swath_breadth = swath_array.shape
 
