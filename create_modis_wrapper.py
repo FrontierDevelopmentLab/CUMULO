@@ -4,7 +4,7 @@ import os
 
 def create_modis_for_dirs(source_dir, save_dir):
     modis_paths = []
-    bashed_files = os.popen("find ../DATA/modis-l1 -type f").read()
+    bashed_files = os.popen("find ./DATA/modis-l1 -type f").read().rstrip()
     filepaths = bashed_files.split("\n")
     source_dirs = set()
     for path in filepaths:
@@ -14,4 +14,4 @@ def create_modis_for_dirs(source_dir, save_dir):
     for directory in source_dirs:
         print(directory)
 
-        create_modis.run(path=directory, save_dir=save_dir)
+        create_modis.run(path="{}/".format(directory), save_dir=save_dir)
