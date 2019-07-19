@@ -2,14 +2,17 @@ import numpy as np
 
 from scipy import interpolate
 
-def fill_channel(matrix, xx, yy, method="nearest"):
+def contain_invalid(masked_matrix):
 
-    array = np.ma.masked_invalid(matrix)
+    return np.sum(masked_matrix.mask) > 0
+
+
+def fill_channel(masked_matrix, xx, yy, method="nearest"):
         
-    x1 = xx[~array.mask]
-    y1 = yy[~array.mask]
+    x1 = xx[~masked_matrix.mask]
+    y1 = yy[~masked_matrix.mask]
 
-    new_array = array[~array.mask]
+    new_mask = masked_matrix[~masked_matrix.mask]
 
     inter = interpolate.griddata((x1, y1), new_array.ravel(), (xx, yy), method=method, fill_value=True)
 
@@ -29,9 +32,16 @@ def fill_all_channels(swath, method="nearest"):
 
     for ch_matrix in swath:
 
-        inter = fill_channel(ch_matrix, xx, yy, method)
+        masked_matrix = np.ma.masked_invalid(ch_matrix)
 
-        filled_swath.append(inter)
+        if contain_invalid:
+        
+            inter = fill_channel(mask, xx, yy, method)
+            filled_swath.append(inter)
+
+        else:
+
+            filled_swath.append(ch_matrix)
 
     filled_swath = np.stack(filled_swath)
 
