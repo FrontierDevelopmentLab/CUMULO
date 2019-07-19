@@ -1,7 +1,6 @@
 from satpy import Scene
 import glob
 import numpy as np
-import image_slicer
 import pickle
 
 
