@@ -2,25 +2,27 @@ import numpy as np
 
 from scipy import interpolate
 
-def contain_invalid(masked_matrix):
+def contain_invalid(masked_array):
 
-    return np.sum(masked_matrix.mask) > 0
+    return np.sum(masked_array.mask) > 0
 
+def fill_channel(masked_array, xx, yy, method="nearest"):
+    
+    x1 = xx[~masked_array.mask]
+    y1 = yy[~masked_array.mask]
 
-def fill_channel(masked_matrix, xx, yy, method="nearest"):
-        
-    x1 = xx[~masked_matrix.mask]
-    y1 = yy[~masked_matrix.mask]
+    new_mask = masked_array[~masked_array.mask]
 
-    new_mask = masked_matrix[~masked_matrix.mask]
-
-    inter = interpolate.griddata((x1, y1), new_array.ravel(), (xx, yy), method=method, fill_value=True)
+    inter = interpolate.griddata((x1, y1), new_mask.ravel(), (xx, yy), method=method, fill_value=True)
 
     return inter
 
 def fill_all_channels(swath, method="nearest"):
     """ 
-        param swath (np.array) : array of size (nb_channels, height, width) 
+        Inplace function: it fills all invalid valued by spatial interpolation a channel at a time
+        :param swath (numpy.array): array of size (nb_channels, height, width) 
+        :param method (string): method for the interpolation. Check scipy.interpolate.griddata for possible methods
+        :return: list of channels that have been filled
     """
 
     swath_shape = swath.shape
@@ -28,21 +30,17 @@ def fill_all_channels(swath, method="nearest"):
     x, y = np.arange(0, swath_shape[2]), np.arange(0, swath_shape[1])
     xx, yy = np.meshgrid(x, y)
 
-    filled_swath = []
+    filled_channels = []
 
-    for ch_matrix in swath:
+    for i, ch_array in enumerate(swath):
 
-        masked_matrix = np.ma.masked_invalid(ch_matrix)
+        masked_array = np.ma.masked_invalid(ch_array)
 
-        if contain_invalid:
-        
-            inter = fill_channel(mask, xx, yy, method)
-            filled_swath.append(inter)
+        if contain_invalid(masked_array):
+            
+            inter = fill_channel(masked_array, xx, yy, method)
+            swath[i] = inter
 
-        else:
+            filled_channels.append(i)
 
-            filled_swath.append(ch_matrix)
-
-    filled_swath = np.stack(filled_swath)
-
-    return filled_swath
+    return filled_channels
