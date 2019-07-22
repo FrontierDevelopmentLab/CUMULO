@@ -40,7 +40,6 @@ class GcpDataTools:
             self.connection = gcsfs.GCSFileSystem(project=self.project_name)
             print("connection to {} on {} established".format(self.bucket_name, self.project_name))
 
-
     @staticmethod
     def path_check(bucketpath):
         """

@@ -3,6 +3,7 @@ import numpy as np
 from scipy import interpolate
 
 def contain_invalid(masked_array):
+    """Checks to see if the array contain any 1s, which would indicate NaNs in the swath."""
 
     return np.sum(masked_array.mask) > 0
 
