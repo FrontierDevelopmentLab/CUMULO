@@ -20,8 +20,8 @@ def run(path, output_dir = ''):
 		lwp = lwp[:1350]
 		cod = level_data.select('Cloud_Optical_Thickness').get()
 		cod = cod[:1350]
-		cloud_mask = level_data.select('Cloud_Mask_1km').get()[:,:1350,:]
-		with open(output_dir + output_filename, 'w') as f:
-			pickle.dump([lwp, cod, cloud_mask, latitude, longitude, dt], f)
-		return
+		cloud_mask = level_data.select('Cloud_Mask_1km').get()[:,:1350,0]
+		#with open(output_dir + output_filename, 'w') as f:
+		#	pickle.dump([lwp, cod, cloud_mask, latitude, longitude, dt], f)
+		return lwp, cod, cloud_mask
 
