@@ -4,33 +4,27 @@ import random
 import os
 
 
-def random_tile_extract_from_file(file_in, payload_path, metadata_path, tile_size=3):
+def random_tile_extract_from_file(swath_array, file_path, tile_size=3):
+    _, tail = os.path.split(file_path)
+
     nullcheck = (lambda x: np.isnan(x).any())
-
-    filename = file_in.split("/")[-1]
-    filename = filename[:-4]
-
-    swath_array = pd.read_pickle(file_in)
 
     swath_bands, swath_length, swath_breadth = swath_array.shape
 
     filecheck_nans = nullcheck(swath_array)
     if filecheck_nans:
-        print("WARNING: {} nan check failed".format(filename))
+        print("WARNING: {} nan check failed".format(tail))
 
         non_nan_in_array = np.count_nonzero(~np.isnan(swath_array))
-        # elements_in_array = swath_bands * swath_length * swath_length
         elements_in_array = len(swath_array.flatten())
 
-        print("{} is {}% complete".format(filename, (non_nan_in_array/elements_in_array)*100))
+        print("{} is {}% complete".format(tail, (non_nan_in_array/elements_in_array)*100))
 
-#    if not tile_size % 2:
-#        raise ValueError("Only odd-sized tile sizes accepted.")
-
-    tile_size_is_even = False
     offset = tile_size // 2
+    offset_2 = offset
+
     if not tile_size % 2:
-        tile_size_is_even = True
+        offset_2 = offset + 1
 
     payload = []
     metadata = []
@@ -38,69 +32,29 @@ def random_tile_extract_from_file(file_in, payload_path, metadata_path, tile_siz
     for vertical_pixel in range((offset+1), swath_length-(offset+1)):
 
         tiles_in_band = []
-        metadata_in_band = []
 
-        random_range = random.choice([(offset+1, (swath_breadth//2)-(offset+1)),
+        random_range = random.choice([(offset + 1, (swath_breadth//2)-(offset+1)),
                                       ((swath_breadth//2)+(offset+1),  swath_breadth-(offset+1))])
 
         random_horizontal_pixel = random.randint(*random_range)
 
         for band in range(swath_bands):
 
-            if tile_size_is_even:
-
-                tile = swath_array[band,
-                                   vertical_pixel - offset: vertical_pixel + offset,
-                                   random_horizontal_pixel - offset: random_horizontal_pixel + offset
-                                   ]
-
-                # tile_check = nullcheck(tile)
-                #
-                # if tile_check:
-                #     print("band {}: NaNs".format(band))
-
-
-
-                tile_metadata = ["{}".format(band),
-                                 "{}:{}".format(vertical_pixel - offset, vertical_pixel + offset),
-                                 "{}:{}".format(random_horizontal_pixel - offset, random_horizontal_pixel + offset)
-                                 ]
-
-            else:
-                tile = swath_array[band,
-                                   vertical_pixel - offset: vertical_pixel + offset + 1,
-                                   random_horizontal_pixel - offset: random_horizontal_pixel + offset + 1]
-
-                tile_metadata = ["{}".format(band),
-                                 "{}:{}".format(random_horizontal_pixel - offset, random_horizontal_pixel + offset + 1),
-                                 "{}:{}".format(vertical_pixel - offset, vertical_pixel + offset + 1)]
+            tile = swath_array[band,
+                               vertical_pixel - offset: vertical_pixel + offset_2 + 1,
+                               random_horizontal_pixel - offset: random_horizontal_pixel + offset_2 + 1
+                               ]
 
             tiles_in_band.append(tile)
-            metadata_in_band.append(tile_metadata)
+
+        tile_metadata = [
+            (vertical_pixel - offset, vertical_pixel + offset_2 + 1),
+            (random_horizontal_pixel - offset, random_horizontal_pixel + offset_2 + 1)
+        ]
 
         payload.append(tiles_in_band)
-        metadata.append(metadata_in_band)
-
-    # i = 0
-    # for pixel in payload:
-    #     print("\n\n\npixel no: {}\n\n\n".format(i))
-    #     i += 1
-    #     for array in pixel: print(array.shape)
+        metadata.append(tile_metadata)
 
     payload_array = np.stack(payload)
 
-    # payload_array_for_test = np.transpose(payload_array, (1, 0, 2, 3))
-
-    # for band in range(15):
-    #     non_nan_in_array = np.count_nonzero(~np.isnan(payload_array_for_test[band]))
-    #     _w, _l, _d = payload_array[band].shape
-    #
-    #     elements_in_array = _w * _l * _d
-    #
-    #     print("{} is {}% complete".format(band, (non_nan_in_array / elements_in_array) * 100))
-
-    payload_path = os.path.join(payload_path, "payload_{}".format(filename))
-    metadata_path = os.path.join(metadata_path, "metadata_{}".format(filename))
-
-    np.save(payload_path, payload_array, allow_pickle=False)
-    np.save(metadata_path, metadata, allow_pickle=False)
+    return[payload_array, metadata]

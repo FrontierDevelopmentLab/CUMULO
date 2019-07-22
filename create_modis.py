@@ -1,8 +1,7 @@
 from satpy import Scene
 import glob
 import numpy as np
-import pickle
-import pdb
+import os
 
 
 def run(path, save_dir='./test_dump/'):
@@ -12,14 +11,27 @@ def run(path, save_dir='./test_dump/'):
 	:return:
 	Given a path in a string format and a save dir (optional otherwise dumps to a test_dump dir) outputs a pickled
 	array saved with the identifying string and date.
+	ToDo update doc for non-save
 	"""
 	filenames = get_modis_filenames(path)
 	for match in filenames:
 		parts = match[0].split('.')
-		dump_array = get_arrays(match)
+		dump_array = get_swath(match)
 		dump_filename = parts[2].replace('A', '') + '_' + parts[3] + '.pkl'
-		with open(save_dir + dump_filename, 'wb') as f:
-			pickle.dump(dump_array, f)
+		# with open(save_dir + dump_filename, 'wb') as f:
+		# 	pickle.dump(dump_array, f)
+
+
+def find_matching_geoloc_file(radiance_filename):
+	"""
+	:param path:
+	:return:
+	ToDo optimise regex, update docs
+	"""
+	head, tail = os.path.split(radiance_filename)
+	identifier = tail.split('A')[1].split('.')[1]
+	geoloc_file = glob.glob(os.path.join(head, '*D03*.{}.*.hdf'.format(identifier)))[0]
+	return geoloc_file
 
 
 def get_modis_filenames(path):
@@ -38,7 +50,7 @@ def get_modis_filenames(path):
 	return matches
 
 
-def get_arrays(files):
+def get_swath(files):
 	"""
 	:param files: list of nested paired MOD02 and MOD03 files
 	:return: numpy array of nested bands per MODIS02 file
