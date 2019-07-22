@@ -3,6 +3,7 @@ from utils import fill_all_channels, contain_invalid
 import extract_payload
 import numpy as np
 import os
+import sys
 
 
 def unsupervised_pipeline_run(target_filepath, save_dir, verbose=1):
@@ -64,3 +65,8 @@ def unsupervised_pipeline_run(target_filepath, save_dir, verbose=1):
 
     if verbose == (2 or 1):
         print("swath {} processed".format(tail))
+
+
+if __name__ == "__main__":
+    target_filepath = sys.argv[1]
+    unsupervised_pipeline_run(target_filepath, save_dir="../DATA/pipeline_output", verbose=1)
