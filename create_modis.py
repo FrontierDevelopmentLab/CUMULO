@@ -2,6 +2,7 @@ from satpy import Scene
 import glob
 import numpy as np
 import pickle
+import pdb
 
 
 def run(path, save_dir='./test_dump/'):
@@ -16,7 +17,7 @@ def run(path, save_dir='./test_dump/'):
 	for match in filenames:
 		parts = match[0].split('.')
 		dump_array = get_arrays(match)
-		dump_filename = parts[2].replace('A','') + '_' + parts[3] + '.pkl'
+		dump_filename = parts[2].replace('A', '') + '_' + parts[3] + '.pkl'
 		with open(save_dir + dump_filename, 'wb') as f:
 			pickle.dump(dump_array, f)
 

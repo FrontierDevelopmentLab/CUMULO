@@ -1,5 +1,6 @@
 import create_modis
 import os
+import pdb
 
 
 def create_modis_for_dirs(source_dir, save_dir):
@@ -13,5 +14,7 @@ def create_modis_for_dirs(source_dir, save_dir):
 
     for directory in source_dirs:
         print(directory)
+
+
 
         create_modis.run(path="{}/".format(directory), save_dir=save_dir)

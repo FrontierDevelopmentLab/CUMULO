@@ -1,9 +1,8 @@
 import create_modis_wrapper
+import pdb
 
-print("source_directory: ../DATA/modis-l1/")
-
-print("save_directory: ../DATA/processed/")
-
+pdb.set_trace()
 create_modis_wrapper.create_modis_for_dirs(source_dir="./DATA/modis-l1/", save_dir="./DATA/processed")
+
 
 print("END OPERATION: files processed")

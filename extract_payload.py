@@ -5,23 +5,22 @@ import os
 
 
 def random_tile_extract_from_file(file_in, payload_path, metadata_path, tile_size=3):
-    nullcheck = (lambda x : np.isnan(x).any())
+    nullcheck = (lambda x: np.isnan(x).any())
 
     filename = file_in.split("/")[-1]
     filename = filename[:-4]
 
     swath_array = pd.read_pickle(file_in)
 
-
     swath_bands, swath_length, swath_breadth = swath_array.shape
-
 
     filecheck_nans = nullcheck(swath_array)
     if filecheck_nans:
         print("WARNING: {} nan check failed".format(filename))
 
         non_nan_in_array = np.count_nonzero(~np.isnan(swath_array))
-        elements_in_array = swath_bands * swath_length * swath_length
+        # elements_in_array = swath_bands * swath_length * swath_length
+        elements_in_array = len(swath_array.flatten())
 
         print("{} is {}% complete".format(filename, (non_nan_in_array/elements_in_array)*100))
 
@@ -99,7 +98,6 @@ def random_tile_extract_from_file(file_in, payload_path, metadata_path, tile_siz
     #     elements_in_array = _w * _l * _d
     #
     #     print("{} is {}% complete".format(band, (non_nan_in_array / elements_in_array) * 100))
-
 
     payload_path = os.path.join(payload_path, "payload_{}".format(filename))
     metadata_path = os.path.join(metadata_path, "metadata_{}".format(filename))
