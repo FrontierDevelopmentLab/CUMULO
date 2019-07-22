@@ -36,7 +36,8 @@ def random_tile_extract_from_file(swath_array, file_path, tile_size=3):
         random_range = random.choice([(offset + 1, (swath_breadth//2)-(offset+1)),
                                       ((swath_breadth//2)+(offset+1),  swath_breadth-(offset+1))])
 
-        random_horizontal_pixel = random.randint(*random_range)
+        random_horizontal_pixel = random.randint(*random_range)ls
+        
 
         for band in range(swath_bands):
 
