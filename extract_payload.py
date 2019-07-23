@@ -46,7 +46,7 @@ def random_tile_extract_from_file(swath_array, file_path, tile_size=3):
         random_range = random.choice([(offset + 1, (swath_breadth//2)-(offset+1)),
                                       ((swath_breadth//2)+(offset+1),  swath_breadth-(offset+1))])
 
-        random_horizontal_pixel = random.randint(*random_range)ls
+        random_horizontal_pixel = random.randint(*random_range)
 
         for band in range(swath_bands):
 
@@ -72,9 +72,12 @@ def random_tile_extract_from_file(swath_array, file_path, tile_size=3):
 
 def striding_tile_extract_from_file(swath_array, file_path, tile_size=3, stride=1):
     """
-    :param swath_array: input numpy array from MODIS :param file_path: the original filepath, for verbose functions
-    :param tile_size: size of the tile selected from within the image :param stride: horizontal steps between images
+    :param swath_array: input numpy array from MODIS
+    :param file_path: the original filepath, for verbose functions
+    :param tile_size: size of the tile selected from within the image
+    :param stride: horizontal steps between images
     :return: a list of two arrays: a 4-d payload array of sample,channel.w*h; and a metadata array of slice (w & h)
+
     This script will systematically sample down the swatch array that it inherits. Excluding padding, which varies
     depending on the tile size, the code iterates down the swath by pixel, and strides across the breadth of the
     swath for a tile. The mid-point of the swath where we expect labelled data in the future has been purposely
@@ -112,11 +115,11 @@ def striding_tile_extract_from_file(swath_array, file_path, tile_size=3, stride=
         tiles_in_band = []
 
         lower_breadth_range = np.arange(start=(offset + 1),
-                                        stop=(swath_breadth//2 - (offset+1)),
+                                        stop=(swath_breadth // 2 - (offset + 1)),
                                         step=stride)
 
-        upper_breadth_range = np.arange(start=(swath_breadth//2 + (offset+1)),
-                                        stop=(swath_breadth - (offset+1)),
+        upper_breadth_range = np.arange(start=(swath_breadth // 2 + (offset + 1)),
+                                        stop=(swath_breadth - (offset + 1)),
                                         step=stride)
 
         horizontal_pixels = np.append(lower_breadth_range, upper_breadth_range)
