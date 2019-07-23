@@ -4,7 +4,7 @@ import sys
 
 from scipy.misc import toimage
 
-from create_modis import get_swath_rgb
+import create_modis
 
 def save_swath_rbgs(radiance_filepath, save_dir, verbose=1):
     """
@@ -29,7 +29,7 @@ def save_swath_rbgs(radiance_filepath, save_dir, verbose=1):
     if verbose:
         print("geoloc found: {}".format(geoloc_filepath))
 
-    visual_swath = get_swath_rgb(radiance_filepath, geoloc_filepath)
+    visual_swath = create_modis.get_swath_rgb(radiance_filepath, geoloc_filepath)
 
     save_filename = os.path.join(save_dir, basename.replace(".hdf", ".png"))
     toimage(visual_swath, cmin=0.0, cmax=255.0).save(save_filename)
@@ -41,4 +41,5 @@ def save_swath_rbgs(radiance_filepath, save_dir, verbose=1):
 # Hook for bash
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
+    print(target_filepath)
     save_swath_rbgs(target_filepath, save_dir="./test", verbose=1)

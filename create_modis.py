@@ -86,13 +86,13 @@ def get_swath(files):
 	return np.array(dump_array)
 
 def get_swath_rgb(radiance_filename, geoloc_filename):
-
+        print(radiance_filename, geoloc_filename)
 	global_scene = Scene(reader='modis_l1b', filenames=[radiance_filename, geoloc_filename])
     #for these images, true_color_uncorrected works while true_color doesn't
 	composite_name = 'true_color_uncorrected'
 	#load it in, make sure resolution is 1000 to match our other datasets
 	global_scene.load([composite_name], resolution=1000)
 	#chop off the final 4 at the end use [:, :, :1350]
-	rgb = np.array(global_scene[composite_name]))[:,:,1350].T
+	rgb = np.array(global_scene[composite_name])[:,:,1350].T
 	
 	return rgb
