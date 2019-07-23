@@ -41,4 +41,4 @@ def save_swath_rbgs(radiance_filepath, save_dir, verbose=1):
 # Hook for bash
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
-    unsupervised_pipeline_run(target_filepath, save_dir="../DATA/pipeline_output", verbose=1)
+    save_swath_rbgs(target_filepath, save_dir="./test", verbose=1)
