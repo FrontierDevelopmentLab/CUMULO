@@ -1,3 +1,4 @@
+from create_modis import get_swath_rgb
 import numpy as np
 import os
 import sys
