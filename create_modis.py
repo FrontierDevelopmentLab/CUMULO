@@ -84,3 +84,12 @@ def get_swath(files):
 	dump_array.append(longitude[:, :1350])
 
 	return np.array(dump_array)
+
+def get_swath_rgb(radiance_filename, geoloc_filename):
+
+	global_scene = Scene(reader='modis_l1b', filenames=[radiance_filename, geoloc_filename])
+
+	composite_name = 'true_color'
+	rgb = global_scene.load([composite_name], resolution=1000)
+	
+	return rgb
