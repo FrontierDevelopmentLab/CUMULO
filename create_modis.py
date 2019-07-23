@@ -2,6 +2,7 @@ from satpy import Scene
 import glob
 import numpy as np
 import os
+import pickle
 
 
 def run(path, save_dir='./test_dump/'):
@@ -11,22 +12,23 @@ def run(path, save_dir='./test_dump/'):
 	:return:
 	Given a path in a string format and a save dir (optional otherwise dumps to a test_dump dir) outputs a pickled
 	array saved with the identifying string and date.
-	ToDo update doc for non-save
 	"""
 	filenames = get_modis_filenames(path)
 	for match in filenames:
 		parts = match[0].split('.')
 		dump_array = get_swath(match)
 		dump_filename = parts[2].replace('A', '') + '_' + parts[3] + '.pkl'
-		# with open(save_dir + dump_filename, 'wb') as f:
-		# 	pickle.dump(dump_array, f)
+		with open(save_dir + dump_filename, 'wb') as f:
+			pickle.dump(dump_array, f)
 
 
 def find_matching_geoloc_file(radiance_filename):
 	"""
-	:param path:
-	:return:
-	ToDo optimise regex, update docs
+	:param radiance_filename: the filename for the radiance .hdf, demarcated with "MOD02".
+	:return geoloc_file: the path to the corresponding geolocational file, demarcated with "MOD03"
+	The radiance (MOD02) geolocational (MOD03) files share the same capture date (saved in the filename itself), yet can
+	have different processing dates (also seen within the filename). A regex search on a partial match in the same
+	directory provides the second filename and path.
 	"""
 	head, tail = os.path.split(radiance_filename)
 	identifier = tail.split('A')[1].split('.')[1]
@@ -55,7 +57,9 @@ def get_swath(files):
 	:param files: list of nested paired MOD02 and MOD03 files
 	:return: numpy array of nested bands per MODIS02 file
 	Uses the satpy Scene reader with the modis-l1b files. Issues reading files might be due to pyhdf not being
-	installed - otherwise try pip install satpy[modis0l1b]
+	installed - otherwise try pip install satpy[modis_0l1b]
+	Creates a scene with the MOD02 and MOD03 files, and extracts them as multi-channel arrays. The lat and long are
+	are appended as additional channels.
 	"""
 	composite = ['1', '2', '29', '33', '34', '35', '36', '26', '27', '20', '21', '22', '23']
 	# load the global scene using satpy
@@ -66,7 +70,7 @@ def get_swath(files):
 	# print available_composites
 	# expects the composite to be in a list
 	global_scene.load(composite, resolution=1000)
-	
+
 	# for database structuring
 	global_scene.load(['latitude', 'longitude'], resolution=1000)
 	latitude = np.array(global_scene['latitude'].load())
@@ -80,3 +84,18 @@ def get_swath(files):
 	dump_array.append(longitude[:, :1350])
 
 	return np.array(dump_array)
+
+def get_swath_rgb(radiance_filename, geoloc_filename):
+
+	global_scene = Scene(reader='modis_l1b', filenames=[radiance_filename, geoloc_filename])
+
+	composite_name = 'true_color'
+	rgb = global_scene.load([composite_name], resolution=1000)
+
+	try:
+		print(rgb.shape)
+	except:
+		raise ValueError("rgb has no shape")
+
+	return rgb
+

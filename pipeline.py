@@ -1,10 +1,11 @@
 import numpy as np
+from PIL import Image
 import os
 import sys
+from utils  import fill_all_channels, contain_invalid
+# from scipy.misc import toimage --depreciated, using PILlow
 
-from scipy.misc import toimage
-
-from create_modis import get_swath_rgb
+from create_modis import get_swath_rgb, find_matching_geoloc_file
 
 def save_swath_rbgs(radiance_filepath, save_dir, verbose=1):
     """
@@ -24,22 +25,40 @@ def save_swath_rbgs(radiance_filepath, save_dir, verbose=1):
         os.makedirs(save_dir)
 
     # find a corresponding geolocational (MOD03) file for the provided radiance (MOD02) file
-    geoloc_filepath = create_modis.find_matching_geoloc_file(radiance_filepath)
+    geoloc_filepath = find_matching_geoloc_file(radiance_filepath)
 
     if verbose:
         print("geoloc found: {}".format(geoloc_filepath))
 
     visual_swath = get_swath_rgb(radiance_filepath, geoloc_filepath)
+    try:
+        print(visual_swath.shape)
+    except:
+        raise ValueError("swath has no shape")
+
+    #interpolate to remove NaN artefacts
+    fill_all_channels(visual_swath)
+
+    # checking if the interpolation is successful
+    new_array = np.ma.masked_invalid(np_swath)
+    if not contain_invalid(new_array):
+        if verbose:
+            print("swath {} interpolated".format(tail))
+        pass
+    else:
+        raise ValueError("swath did not interpolate successfully")
+
+    pil_loaded_visual_swath = Image.fromarray(visual_swath)
 
     save_filename = os.path.join(save_dir, basename.replace(".hdf", ".png"))
-    toimage(visual_swath, cmin=0.0, cmax=255.0).save(save_filename)
+    pil_loaded_visual_swath.save(save_filename)
 
-    if verbose != 0:
+    if verbose:
         print("swath {} processed".format(tail))
 
 
-# Hook for bash
+# Hook for pipe in
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
-    save_swath_rbgs(target_filepath, save_dir="./test", verbose=1)
+    save_swath_rbgs(target_filepath, save_dir="..DATA/pipeline_output/190723_png_extract", verbose=1)
 
