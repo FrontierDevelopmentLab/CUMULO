@@ -69,4 +69,4 @@ def unsupervised_pipeline_run(target_filepath, save_dir, verbose=1):
 
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
-    unsupervised_pipeline_run(target_filepath, save_dir="../DATA/pipeline_output", verbose=1)
+    unsupervised_pipeline_run(target_filepath, save_dir="../DATA/pipeline_output/190723_unsupervised_run_1", verbose=1)
