@@ -101,6 +101,19 @@ def striding_tile_extract_from_file(swath_array, file_path, tile_size=3, stride=
 
         print("{} is {}% complete".format(tail, (non_nan_in_array / elements_in_array) * 100))
 
+    _, tail = os.path.split(file_path)
+
+    nullcheck = (lambda x: np.isnan(x).any())
+
+    filecheck_nans = nullcheck(swath_array)
+    if filecheck_nans:
+        print("WARNING: {} nan check failed".format(tail))
+
+        non_nan_in_array = np.count_nonzero(~np.isnan(swath_array))
+        elements_in_array = len(swath_array.flatten())
+
+        print("{} is {}% complete".format(tail, (non_nan_in_array / elements_in_array) * 100))
+
     offset = tile_size // 2
     offset_2 = offset
 
@@ -110,38 +123,46 @@ def striding_tile_extract_from_file(swath_array, file_path, tile_size=3, stride=
     payload = []
     metadata = []
 
-    for vertical_pixel in range((offset + 1), swath_length - (offset + 1)):
+    lower_breadth_range = np.arange(start=(offset + 1),
+                                    stop=(swath_breadth // 2 - (offset + 1)),
+                                    step=stride)
 
-        tiles_in_band = []
+    upper_breadth_range = np.arange(start=(swath_breadth // 2 + (offset + 1)),
+                                    stop=(swath_breadth - (offset + 1)),
+                                    step=stride)
 
-        lower_breadth_range = np.arange(start=(offset + 1),
-                                        stop=(swath_breadth // 2 - (offset + 1)),
-                                        step=stride)
+    horizontal_pixels = np.append(lower_breadth_range, upper_breadth_range)
 
-        upper_breadth_range = np.arange(start=(swath_breadth // 2 + (offset + 1)),
-                                        stop=(swath_breadth - (offset + 1)),
-                                        step=stride)
+    vertical_pixels = np.arange(start=(offset + 1),
+                                stop=(swath_length - (offset + 1)),
+                                step=stride)
 
-        horizontal_pixels = np.append(lower_breadth_range, upper_breadth_range)
-
+    centre_of_tile_position = []
+    for vertical_pixel in vertical_pixels:
         for horizontal_pixel in horizontal_pixels:
+            coordinates = (vertical_pixel, horizontal_pixel)
+            centre_of_tile_position.append(coordinates)
 
-            for band in range(swath_bands):
-                tile = swath_array[band,
-                                   vertical_pixel - offset: vertical_pixel + offset_2 + 1,
-                                   horizontal_pixel - offset: horizontal_pixel + offset_2 + 1
-                                   ]
+    for co_ord in centre_of_tile_position:
+        vertical_pos = co_ord[0]
+        horizontal_pos = co_ord[1]
 
-                tiles_in_band.append(tile)
+        bands_in_tile = []
+        for band in range(swath_bands):
+            tile = swath_array[band,
+                               vertical_pos - offset: vertical_pos + offset_2 + 1,
+                               horizontal_pos - offset: horizontal_pos + offset_2 + 1
+                               ]
 
-            tile_metadata = [
-                (vertical_pixel - offset, vertical_pixel + offset_2 + 1),
-                (horizontal_pixel - offset, horizontal_pixel + offset_2 + 1)
-            ]
+            bands_in_tile.append(tile)
 
-            payload.append(tiles_in_band)
-            metadata.append(tile_metadata)
+        tile_metadata = [
+            (vertical_pos - offset, vertical_pos + offset_2 + 1),
+            (horizontal_pos - offset, horizontal_pos + offset_2 + 1)]
 
-        payload_array = np.stack(payload)
+        metadata.append(tile_metadata)
+        payload.append(bands_in_tile)
 
-        return [payload_array, metadata]
+    payload_array = np.stack(payload)
+
+    return [payload_array, metadata]
