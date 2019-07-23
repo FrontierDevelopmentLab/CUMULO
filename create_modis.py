@@ -70,7 +70,7 @@ def get_swath(files):
 	# print available_composites
 	# expects the composite to be in a list
 	global_scene.load(composite, resolution=1000)
-	
+
 	# for database structuring
 	global_scene.load(['latitude', 'longitude'], resolution=1000)
 	latitude = np.array(global_scene['latitude'].load())
