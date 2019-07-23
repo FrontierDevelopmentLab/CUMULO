@@ -62,7 +62,7 @@ def unsupervised_pipeline_run(target_filepath, save_dir, verbose=1):
         print("swath {} saved".format(tail))
 
     # sample the swath for a selection of tiles and its associated metadata
-    tiles, metadata = extract_payload.striding_tile_extract_from_file(np_swath, target_filepath, tile_size=3, stride=1)
+    tiles, metadata = extract_payload.striding_tile_extract_from_file(np_swath, target_filepath, tile_size=3, stride=3)
 
     if verbose:
         print("tiles and metadata extracted from swath {}".format(tail))
@@ -81,4 +81,4 @@ def unsupervised_pipeline_run(target_filepath, save_dir, verbose=1):
 # Hook for bash
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
-    unsupervised_pipeline_run(target_filepath, save_dir="../DATA/pipeline_output/190723_unsupervised_run_2", verbose=1)
+    unsupervised_pipeline_run(target_filepath, save_dir="../DATA/pipeline_output/190723_unsupervised_run_3_sequential", verbose=1)
