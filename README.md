@@ -47,4 +47,10 @@ There is a known Gotcha with file permissions for installing `pyhdf`. If you end
 
 run `sudo chown -R USERNAME:USERNAME /home/USERNAME/` replacing USERNAME with your user. Run the install again -  you should have a clean run.
 
+## Unsupervised Pipeline
 
+The first functional pipeline extracts unlabelled data from modis swaths, running on the `pipeline` GCP instance.
+
+The `unsupervised_pipeline.py` code wraps around the `create_modis` script, `utils` interpolation methods and the `extract_payload` script to pull numpy arrays from hdfs, interpolate for artefact `NaN`s and sample tiles from the corrected array, for the ResNet to ingest down-stream. This code only processes one hdf at a time.
+
+The `run_pipeline.bash` file drives the script, piping MOD02 files and parallelising the code  using `xargs`. Tests show effective parallelisation, with 100% cpu utilisation across a 24 core instance.
