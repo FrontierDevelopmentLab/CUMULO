@@ -93,5 +93,6 @@ def get_swath_rgb(radiance_filename, geoloc_filename):
 	#load it in, make sure resolution is 1000 to match our other datasets
 	global_scene.load([composite_name], resolution=1000)
 	#chop off the final 4 at the end use [:, :, :1350]
-	rg = np.array(global_scene[composite_name]))[:,:,1350]
+	rgb = np.array(global_scene[composite_name]))[:,:,1350].T
+	
 	return rgb
