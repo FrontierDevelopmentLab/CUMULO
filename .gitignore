@@ -1,10 +1,5 @@
-
 test_file\.py
-
 Notebooks/\.ipynb_checkpoints/
-
 *.npy
-
 DATA/
-
 __pycache__/
