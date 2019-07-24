@@ -3,3 +3,5 @@ Notebooks/\.ipynb_checkpoints/
 *.npy
 DATA/
 __pycache__/
+
+*pycache*/
