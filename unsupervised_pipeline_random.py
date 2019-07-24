@@ -2,11 +2,12 @@ import create_modis
 from utils import fill_all_channels, contain_invalid
 import extract_payload
 import numpy as np
+import modis_L2 as mL2
 import os
 import sys
 
 
-def unsupervised_pipeline_run(target_filepath, save_dir, verbose=1):
+def unsupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verbose=1):
     """
     :param target_filepath: the filepath of the radiance (MOD02) input file
     :param save_dir:
@@ -53,7 +54,15 @@ def unsupervised_pipeline_run(target_filepath, save_dir, verbose=1):
         pass
     else:
         raise ValueError("swath did not interpolate successfully")
-
+    
+    #add in the L2 channels here
+    #this includes only LWP and cloud optical depth atm. cloud mask incoming when MYD35 files come
+    #these can be filled with NaN, however as they are not being passed to the IRESNET, that is OK
+    lwp, cod = mL2.run(modis_files[0], level2_filepath)
+    #add the arrays to the end as separate channels
+    np_swath = np.append(np_swath, lwp)
+    np_swath = np.append(np_swath, cod)
+    
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
     swath_savepath_str = os.path.join(save_dir, "swath", tail.replace(".hdf", ".npy"))
     np.save(swath_savepath_str, np_swath, allow_pickle=False)
