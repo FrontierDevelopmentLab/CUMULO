@@ -15,8 +15,8 @@ def get_l2_filename(filename_example, root):
     
 '''take in the level 1 filename and rootdir for the level 2 data, finds the cloud optical depth
 (cod), liquid water path (lwp), and cloud mask for the swath'''
-def run(l1_filename, root_dir, output_dir = ''):
-	filename = l1_filename
+def run(l1_filename, root_dir):
+	filename = get_L2_filename(l1_filename, root_dir)
 	level_data = SD(filename, SDC.READ)
 	latitude = level_data.select('Latitude').get()
 	longitude = level_data.select('Longitude').get()
