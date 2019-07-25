@@ -2,19 +2,22 @@ import create_modis
 from utils import fill_all_channels, contain_invalid
 import extract_payload
 import numpy as np
+import modis_l2
 import os
 import sys
+import pdb
 
 
-def unsupervised_pipeline_run(target_filepath, save_dir, verbose=1):
+def semisupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verbose=1):
     """
     :param target_filepath: the filepath of the radiance (MOD02) input file
+    :param level2_filepath: the filepath of the aqua_level2 input file
     :param save_dir:
     :param verbose: verbosity switch: 0 - silent, 1 - verbose, 2 - partial, only prints confirmation at end
     :return: none
     Wrapper for the full pipeline. Expects to find a corresponding MOD03 file in the same directory. Comments throughout
     """
-
+    # pdb.set_trace()
     head, tail = os.path.split(target_filepath)
 
     # creating the save directories
@@ -24,21 +27,21 @@ def unsupervised_pipeline_run(target_filepath, save_dir, verbose=1):
         try:
             os.makedirs(dir_path)
         except FileExistsError:
-            if verbose:
+            if verbose == 1:
                 print("{} exists".format(dir_path))
             pass
 
     # find a corresponding geolocational (MOD03) file for the provided radiance (MOD02) file
     geoloc_filepath = create_modis.find_matching_geoloc_file(target_filepath)
 
-    if verbose:
+    if verbose == 1:
         print("geoloc found: {}".format(geoloc_filepath))
 
     # pull a numpy array from the hdfs, now that we have both radiance and geolocational files
     modis_files = [target_filepath, geoloc_filepath]
     np_swath = create_modis.get_swath(modis_files)
 
-    if verbose:
+    if verbose == 1:
         print("swath {} loaded".format(tail))
         print("swath shape: {}".format(np_swath.shape))
 
@@ -48,23 +51,35 @@ def unsupervised_pipeline_run(target_filepath, save_dir, verbose=1):
     # checking if the interpolation is successful
     new_array = np.ma.masked_invalid(np_swath)
     if not contain_invalid(new_array):
-        if verbose:
+        if verbose == 1:
             print("swath {} interpolated".format(tail))
         pass
     else:
         raise ValueError("swath did not interpolate successfully")
-    
+
+    # add in the L2 channels here
+    # this includes only LWP and cloud optical depth atm. cloud mask incoming when MYD35 files come
+    # these can be filled with NaN, however as they are not being passed to the IRESNET, that is OK
+    #  pdb.set_trace()
+    lwp, cod = modis_l2.run(target_filepath, level2_filepath)
+    # add the arrays to the end as separate channels
+    np_swath = np.append(np_swath, [lwp], axis=0)
+    np_swath = np.append(np_swath, [cod], axis=0)
+
+    if verbose == 1:
+        print("swath {} level 2 aqua added".format(tail))
+
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
     swath_savepath_str = os.path.join(save_dir, "swath", tail.replace(".hdf", ".npy"))
     np.save(swath_savepath_str, np_swath, allow_pickle=False)
 
-    if verbose:
+    if verbose == 1:
         print("swath {} saved".format(tail))
 
     # sample the swath for a selection of tiles and its associated metadata
     tiles, metadata = extract_payload.random_tile_extract_from_file(np_swath, target_filepath, tile_size=3)
 
-    if verbose:
+    if verbose == 1:
         print("tiles and metadata extracted from swath {}".format(tail))
 
     # create the save filepaths for the payload and metadata, and save the npys
@@ -74,11 +89,14 @@ def unsupervised_pipeline_run(target_filepath, save_dir, verbose=1):
     np.save(tiles_savepath_str, tiles, allow_pickle=False)
     np.save(metadata_savepath_str, metadata, allow_pickle=False)
 
-    if verbose == (2 or 1):
+    if verbose == 2:
         print("swath {} processed".format(tail))
 
 
 # Hook for bash
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
-    unsupervised_pipeline_run(target_filepath, save_dir="../DATA/pipeline_output/190723_unsupervised_run_2", verbose=1)
+    semisupervised_pipeline_run(target_filepath,
+                                level2_filepath="/mnt/disks/disk4/l2_aqua_flattened/",
+                                save_dir="../DATA/pipeline_output/190725_unsupervised_run_1_random",
+                                verbose=2)

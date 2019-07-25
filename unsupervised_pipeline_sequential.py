@@ -81,4 +81,6 @@ def unsupervised_pipeline_run(target_filepath, save_dir, verbose=1):
 # Hook for bash
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
-    unsupervised_pipeline_run(target_filepath, save_dir="../DATA/pipeline_output/190723_unsupervised_run_3_sequential", verbose=1)
+    unsupervised_pipeline_run(target_filepath,
+                              save_dir="../DATA/pipeline_output/190723_unsupervised_run_3_sequential",
+                              verbose=1)
