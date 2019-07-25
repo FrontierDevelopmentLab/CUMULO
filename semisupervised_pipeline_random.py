@@ -7,6 +7,7 @@ import os
 import sys
 import pdb
 
+
 def semisupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verbose=1):
     """
     :param target_filepath: the filepath of the radiance (MOD02) input file
@@ -88,7 +89,7 @@ def semisupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verb
     np.save(tiles_savepath_str, tiles, allow_pickle=False)
     np.save(metadata_savepath_str, metadata, allow_pickle=False)
 
-    if verbose == (2 or 1):
+    if verbose == 2:
         print("swath {} processed".format(tail))
 
 
@@ -97,5 +98,5 @@ if __name__ == "__main__":
     target_filepath = sys.argv[1]
     semisupervised_pipeline_run(target_filepath,
                                 level2_filepath="/mnt/disks/disk4/l2_aqua_flattened/",
-                                save_dir="../DATA/pipeline_output/190723_unsupervised_run_2",
-                                verbose=1)
+                                save_dir="../DATA/pipeline_output/190725_unsupervised_run_1_random",
+                                verbose=2)
