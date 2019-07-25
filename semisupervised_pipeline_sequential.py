@@ -1,14 +1,16 @@
+import sys
 import create_modis
 from utils import fill_all_channels, contain_invalid
 import extract_payload
 import numpy as np
+import modis_l2
 import os
-import sys
 
 
-def unsupervised_pipeline_run(target_filepath, save_dir, verbose=1):
+def semisupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verbose=1):
     """
     :param target_filepath: the filepath of the radiance (MOD02) input file
+    :param level2_filepath: the filepath of the aqua_level2 input file
     :param save_dir:
     :param verbose: verbosity switch: 0 - silent, 1 - verbose, 2 - partial, only prints confirmation at end
     :return: none
@@ -53,6 +55,23 @@ def unsupervised_pipeline_run(target_filepath, save_dir, verbose=1):
         pass
     else:
         raise ValueError("swath did not interpolate successfully")
+    
+    # add in the L2 channels here
+    # this includes only LWP and cloud optical depth atm. cloud mask incoming when MYD35 files come
+    # these can be filled with NaN, however as they are not being passed to the IRESNET, that is OK
+    lwp, cod = modis_l2.run(modis_files[0], level2_filepath)
+    # add the arrays to the end as separate channels
+    np_swath = np.append(np_swath, lwp)
+    np_swath = np.append(np_swath, cod)
+
+    # recheck for nans
+    new_array = np.ma.masked_invalid(np_swath)
+    if not contain_invalid(new_array):
+        if verbose:
+            print("swath {} interpolated".format(tail))
+        pass
+    else:
+        raise ValueError("swath did not interpolate successfully")
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
     swath_savepath_str = os.path.join(save_dir, "swath", tail.replace(".hdf", ".npy"))
@@ -81,6 +100,7 @@ def unsupervised_pipeline_run(target_filepath, save_dir, verbose=1):
 # Hook for bash
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
-    unsupervised_pipeline_run(target_filepath,
-                              save_dir="../DATA/pipeline_output/190723_unsupervised_run_3_sequential",
-                              verbose=1)
+    semisupervised_pipeline_run(target_filepath,
+                                level2_filepath="/mnt/disks/disk4/l2_aqua_flattened",
+                                save_dir="../DATA/pipeline_output/190725_unsupervised_run_1_aqua_sequential",
+                                verbose=1)
