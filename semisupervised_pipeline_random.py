@@ -27,21 +27,21 @@ def semisupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verb
         try:
             os.makedirs(dir_path)
         except FileExistsError:
-            if verbose:
+            if verbose == 1:
                 print("{} exists".format(dir_path))
             pass
 
     # find a corresponding geolocational (MOD03) file for the provided radiance (MOD02) file
     geoloc_filepath = create_modis.find_matching_geoloc_file(target_filepath)
 
-    if verbose:
+    if verbose == 1:
         print("geoloc found: {}".format(geoloc_filepath))
 
     # pull a numpy array from the hdfs, now that we have both radiance and geolocational files
     modis_files = [target_filepath, geoloc_filepath]
     np_swath = create_modis.get_swath(modis_files)
 
-    if verbose:
+    if verbose == 1:
         print("swath {} loaded".format(tail))
         print("swath shape: {}".format(np_swath.shape))
 
@@ -51,7 +51,7 @@ def semisupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verb
     # checking if the interpolation is successful
     new_array = np.ma.masked_invalid(np_swath)
     if not contain_invalid(new_array):
-        if verbose:
+        if verbose == 1:
             print("swath {} interpolated".format(tail))
         pass
     else:
@@ -66,20 +66,20 @@ def semisupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verb
     np_swath = np.append(np_swath, [lwp], axis=0)
     np_swath = np.append(np_swath, [cod], axis=0)
 
-    if verbose:
+    if verbose == 1:
         print("swath {} level 2 aqua added".format(tail))
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
     swath_savepath_str = os.path.join(save_dir, "swath", tail.replace(".hdf", ".npy"))
     np.save(swath_savepath_str, np_swath, allow_pickle=False)
 
-    if verbose:
+    if verbose == 1:
         print("swath {} saved".format(tail))
 
     # sample the swath for a selection of tiles and its associated metadata
     tiles, metadata = extract_payload.random_tile_extract_from_file(np_swath, target_filepath, tile_size=3)
 
-    if verbose:
+    if verbose == 1:
         print("tiles and metadata extracted from swath {}".format(tail))
 
     # create the save filepaths for the payload and metadata, and save the npys
