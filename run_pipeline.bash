@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-find ../DATA/raw/190723_unsup_pipeline/ -type f | grep "MOD021KM" | xargs --max-procs=64 -n 1 python unsupervised_pipeline_sequential.py
+find /mnt/disks/disk4/l1_aqua/ -type f | grep "MYD021KM" | xargs --max-procs=96 -n 1 python semisupervised_pipeline_random.py

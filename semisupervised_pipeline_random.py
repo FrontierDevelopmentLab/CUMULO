@@ -5,7 +5,7 @@ import numpy as np
 import modis_l2
 import os
 import sys
-
+import pdb
 
 def semisupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verbose=1):
     """
@@ -16,7 +16,7 @@ def semisupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verb
     :return: none
     Wrapper for the full pipeline. Expects to find a corresponding MOD03 file in the same directory. Comments throughout
     """
-
+    # pdb.set_trace()
     head, tail = os.path.split(target_filepath)
 
     # creating the save directories
@@ -55,23 +55,18 @@ def semisupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verb
         pass
     else:
         raise ValueError("swath did not interpolate successfully")
-    
+
     # add in the L2 channels here
     # this includes only LWP and cloud optical depth atm. cloud mask incoming when MYD35 files come
     # these can be filled with NaN, however as they are not being passed to the IRESNET, that is OK
-    lwp, cod = modis_l2.run(modis_files[0], level2_filepath)
+    #  pdb.set_trace()
+    lwp, cod = modis_l2.run(target_filepath, level2_filepath)
     # add the arrays to the end as separate channels
-    np_swath = np.append(np_swath, lwp)
-    np_swath = np.append(np_swath, cod)
+    np_swath = np.append(np_swath, [lwp], axis=0)
+    np_swath = np.append(np_swath, [cod], axis=0)
 
-    # recheck for nans
-    new_array = np.ma.masked_invalid(np_swath)
-    if not contain_invalid(new_array):
-        if verbose:
-            print("swath {} interpolated".format(tail))
-        pass
-    else:
-        raise ValueError("swath did not interpolate successfully")
+    if verbose:
+        print("swath {} level 2 aqua added".format(tail))
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
     swath_savepath_str = os.path.join(save_dir, "swath", tail.replace(".hdf", ".npy"))
@@ -101,6 +96,6 @@ def semisupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verb
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
     semisupervised_pipeline_run(target_filepath,
-                                level2_filepath="/mnt/disks/disk4/l2_aqua_flattened",
+                                level2_filepath="/mnt/disks/disk4/l2_aqua_flattened/",
                                 save_dir="../DATA/pipeline_output/190723_unsupervised_run_2",
                                 verbose=1)
