@@ -24,10 +24,12 @@ def run(l1_filename, root_dir):
 	longitude = longitude[:][:1350]
 	lwp = level_data.select('Cloud_Water_Path').get()[:,:1350].tolist()
 	cod = level_data.select('Cloud_Optical_Thickness').get()[:,:1350].tolist()
+	ctp = level_data.select('cloud_top_pressure_1km').get()[:,:1350].tolist()
 	#remove fill value of -9999 and replace with np.nan
 	for i in range(len(lwp)):
 		for j in range(len(lwp[i])):
 			if lwp[i][j] == -9999:
 				cod[i][j] = float('NaN')
 				lwp[i][j] = float('NaN')
-	return np.array(lwp), np.array(cod)
+				ctp[i][j] = float('NaN')
+	return np.array(lwp), np.array(cod), np.array(ctp)
