@@ -2,6 +2,12 @@ import numpy as np
 import math
 import pdb
 
+# fast euclidean distance computation: https://stackoverflow.com/questions/37794849/efficient-and-precise-calculation-of-the-euclidean-distance
+def eudis5(v1, v2):
+    dist = [(a - b)**2 for a, b in zip(v1, v2)]
+    #dist = math.sqrt(sum(dist))
+    return dist
+    
 def align(track_points, swath_lat, swath_lon):
     p = track_points.shape[0]
     n = swath_lat.shape[0]
@@ -58,11 +64,5 @@ if __name__ == "__name__":
                          [3, 9.1, 18.4],
                          [7, 10.1,39.1],
                          [6, 13.7,45.9]])
-
-    # fast euclidean distance computation: https://stackoverflow.com/questions/37794849/efficient-and-precise-calculation-of-the-euclidean-distance
-    def eudis5(v1, v2):
-        dist = [(a - b)**2 for a, b in zip(v1, v2)]
-        #dist = math.sqrt(sum(dist))
-        return dist
 
     labels = align(points, test_lat, test_lon)

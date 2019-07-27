@@ -1,13 +1,14 @@
-import sys
-import create_modis
-from utils import fill_all_channels, contain_invalid
-import extract_payload
 import numpy as np
-import modis_l2
 import os
+import sys
 
+import create_modis
+import extract_payload
+import modis_l2
+from cloud_mask import get_cloudsat_mask
+from utils import all_invalid, contain_invalid, fill_all_channels
 
-def semisupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verbose=1):
+def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir, save_dir, verbose=1):
     """
     :param target_filepath: the filepath of the radiance (MOD02) input file
     :param level2_filepath: the filepath of the aqua_level2 input file
@@ -20,15 +21,13 @@ def semisupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verb
     head, tail = os.path.split(target_filepath)
 
     # creating the save directories
-    save_dirs = [os.path.join(save_dir, "swath"), os.path.join(save_dir, "tiles"), os.path.join(save_dir, "metadata")]
+    save_dir_swath = os.path.join(save_dir, "swath")
+    save_dir_daylight = os.path.join(save_dir_swath, "daylight")
+    save_dir_night = os.path.join(save_dir_swath, "night")
 
-    for dir_path in save_dirs:
-        try:
-            os.makedirs(dir_path)
-        except FileExistsError:
-            if verbose:
-                print("{} exists".format(dir_path))
-            pass
+    for dr in [save_dir_swath, save_dir_daylight, save_dir_night]:
+        if not os.path.exists(dr):
+            os.makedirs(dr)
 
     # find a corresponding geolocational (MOD03) file for the provided radiance (MOD02) file
     geoloc_filepath = create_modis.find_matching_geoloc_file(target_filepath)
@@ -45,36 +44,36 @@ def semisupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verb
         print("swath shape: {}".format(np_swath.shape))
 
     # as some bands have artefacts, we need to interpolate the missing data - time intensive
-    fill_all_channels(np_swath)
+    # check if visible channels contain NaNs
+    # TODO: check also if daylight or not
+    if all_invalid(np_swath[:2]):
+        save_subdir = save_dir_night
+        # all channels but visible ones
+        fill_all_channels(np_swath[2:])
 
-    # checking if the interpolation is successful
-    new_array = np.ma.masked_invalid(np_swath)
-    if not contain_invalid(new_array):
-        if verbose:
-            print("swath {} interpolated".format(tail))
-        pass
     else:
-        raise ValueError("swath did not interpolate successfully")
+        save_subdir = save_dir_daylight
+        # all channels but visible ones
+        fill_all_channels(np_swath)
     
     # add in the L2 channels here
-    # this includes only LWP and cloud optical depth atm. cloud mask incoming when MYD35 files come
+    # this includes only LWP, cloud optical depth atm, cloud top pressure
     # these can be filled with NaN, however as they are not being passed to the IRESNET, that is OK
-    lwp, cod = modis_l2.run(modis_files[0], level2_filepath)
-    # add the arrays to the end as separate channels
-    np_swath = np.append(np_swath, lwp)
-    np_swath = np.append(np_swath, cod)
+    lwp, cod, ctp, cth = modis_l2.run(modis_files[0], level2_filepath)
 
-    # recheck for nans
-    new_array = np.ma.masked_invalid(np_swath)
-    if not contain_invalid(new_array):
-        if verbose:
-            print("swath {} interpolated".format(tail))
-        pass
-    else:
-        raise ValueError("swath did not interpolate successfully")
+    # get cloud mask channel
+    cm = get_cloud_mask(cloudmask_dir, target_filepath)
+
+    # get cloudsat labels channel
+    # last two channels of np_swath correspond to Latitude and Longitude
+    lm = get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
+
+    # add the arrays to the end as separate channels
+    np_swath = np.vstack([np_swath, lwp, cod, ctp, cth, cm, lm])
+    assert np_swath.shape[0] == 21, "wrong number of channels"
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
-    swath_savepath_str = os.path.join(save_dir, "swath", tail.replace(".hdf", ".npy"))
+    swath_savepath_str = os.path.join(save_subdir, "swath", tail.replace(".hdf", ".npy"))
     np.save(swath_savepath_str, np_swath, allow_pickle=False)
 
     if verbose:
@@ -87,8 +86,8 @@ def semisupervised_pipeline_run(target_filepath, level2_filepath, save_dir, verb
         print("tiles and metadata extracted from swath {}".format(tail))
 
     # create the save filepaths for the payload and metadata, and save the npys
-    tiles_savepath_str = os.path.join(save_dir, "tiles", tail.replace(".hdf", ".npy"))
-    metadata_savepath_str = os.path.join(save_dir, "metadata", tail.replace(".hdf", ".npy"))
+    tiles_savepath_str = os.path.join(save_subdir, "tiles", tail.replace(".hdf", ".npy"))
+    metadata_savepath_str = os.path.join(save_subdir, "metadata", tail.replace(".hdf", ".npy"))
 
     np.save(tiles_savepath_str, tiles, allow_pickle=False)
     np.save(metadata_savepath_str, metadata, allow_pickle=False)
