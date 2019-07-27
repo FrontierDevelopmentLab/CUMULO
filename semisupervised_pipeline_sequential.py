@@ -67,10 +67,10 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudsat_dir, save_
     # add in the L2 channels here
     # this includes only LWP, cloud optical depth atm, cloud top pressure
     # these can be filled with NaN, however as they are not being passed to the IRESNET, that is OK
-    lwp, cod, ctp, cth = modis_l2.run(modis_files[0], level2_dir)
+    lwp, cod, ctp, cth = modis_l2.run(modis_files[0])
 
     # get cloud mask channel
-    cm = get_cloud_mask(cloudmask_dirlevel2_dir, target_filepath)
+    cm = get_cloud_mask(level2_dir, target_filepath)
 
     # get cloudsat labels channel
     # last two channels of np_swath correspond to Latitude and Longitude
