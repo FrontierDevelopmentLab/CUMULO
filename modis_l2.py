@@ -24,24 +24,35 @@ def get_matching_l2_filename(radiance_filename, l2_dir):
     tail_parts = tail.split('.')
     head_parts = head.split('/')
     
-    print(os.path.join(l2_dir, head_parts[-3], head_parts[-2], head_parts[-1], 'MYD06_L2.{}.{}.*.hdf'.format(tail_parts[1], tail_parts[2])))
-    
     l2_filename = glob.glob(os.path.join(l2_dir, head_parts[-3], head_parts[-2], head_parts[-1], 'MYD06_L2.{}.{}.*.hdf'.format(tail_parts[1], tail_parts[2])))[0]
     return l2_filename
 
 '''take in the level 1 filename and rootdir for the level 2 data, finds the cloud optical depth
 (cod), liquid water path (lwp), and cloud mask for the swath'''
 
+def get_cloud_mask(l2_filename):
+
+    swath = Scene(reader = 'modis_l2', filenames = [cloud_mask_filename, level_1_filename])
+    swath.load(['cloud_mask'], resolution = 1000)
+
+    cloud_mask = np.array(swath['cloud_mask'].load())[:, :1350]
+    cloud_mask = cloud_mask > 0
+    cloud_mask = cloud_mask.astype(int)
+    
+    return cloud_mask
 
 def run(l1_filename, l2_dir):
     filename = get_matching_l2_filename(l1_filename, l2_dir)
+
+    cloud_mask = get_cloud_mask(filename)
+
     level_data = SD(filename, SDC.READ)
 
     lwp = level_data.select('Cloud_Water_Path').get()[:,:1350].tolist()
     cod = level_data.select('Cloud_Optical_Thickness').get()[:,:1350].tolist()
     ctp = level_data.select('cloud_top_pressure_1km').get()[:,:1350].tolist()
     
-    channels = np.stack([lwp, cod, ctp])
+    channels = np.stack([lwp, cod, ctp, cloud_mask])
     
     #remove fill value of -9999 and replace with np.nan
     np.where(lwp==-9999, np.NaN, channels)
