@@ -67,7 +67,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudsat_dir, save_
     # add in the L2 channels here
     # this includes only LWP, cloud optical depth atm, cloud top pressure
     # these can be filled with NaN, however as they are not being passed to the IRESNET, that is OK
-    lwp, cod, ctp, cth = modis_l2.run(modis_files[0])
+    l2_channels = modis_l2.run(target_filepath, level2_dir)
 
     # get cloud mask channel
     cm = get_cloud_mask(level2_dir, target_filepath)
@@ -82,7 +82,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudsat_dir, save_
         print("Cloudsat alignment took {} s".format(t2 - t1))
 
     # add the arrays to the end as separate channels
-    np_swath = np.vstack([np_swath, lwp, cod, ctp, cth, cm, lm])
+    np_swath = np.vstack([np_swath, l2_channels, cm, lm])
     assert np_swath.shape[0] == 21, "wrong number of channels"
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
@@ -112,7 +112,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudsat_dir, save_
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
     semisupervised_pipeline_run(target_filepath,
-                                level2_dir="~/DATA/level_2/",
-                                cloudsat_dir="~/DATA/cc_with_hours/",
-                                save_dir="~/DATA/semisuper_sequential/",
+                                level2_dir="../DATA/level_2/",
+                                cloudsat_dir="../DATA/cc_with_hours/",
+                                save_dir="../DATA/semisuper_sequential/",
                                 verbose=1)
