@@ -43,7 +43,7 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
 
     cloudsat_filename = get_cloudsat_filename(l1_filename)
 
-    with open glob.glob(cloudsat_filename) as f:
+    with open(cloudsat_filename, "rb") as f:
         
         # pickle containing three lists, corresponding to latitude, longitude and label
         cloudsat_list = pickle.load(f)

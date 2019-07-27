@@ -24,20 +24,20 @@ def get_l2_filename(filename_example, root):
 
 def run(l1_filename, root_dir):
     filename = get_l2_filename(l1_filename, root_dir)
-	level_data = SD(filename, SDC.READ)
+    level_data = SD(filename, SDC.READ)
 
-	lwp = level_data.select('Cloud_Water_Path').get()[:,:1350].tolist()
-	cod = level_data.select('Cloud_Optical_Thickness').get()[:,:1350].tolist()
-	ctp = level_data.select('cloud_top_pressure_1km').get()[:,:1350].tolist()
+    lwp = level_data.select('Cloud_Water_Path').get()[:,:1350].tolist()
+    cod = level_data.select('Cloud_Optical_Thickness').get()[:,:1350].tolist()
+    ctp = level_data.select('cloud_top_pressure_1km').get()[:,:1350].tolist()
     cth = level_data.select('Cloud_Top_Height').get()[:,:1350].tolist()
     
-	#remove fill value of -9999 and replace with np.nan
-	for i in range(len(lwp)):
-		for j in range(len(lwp[i])):
-			if lwp[i][j] == -9999:
-				cod[i][j] = float('NaN')
-				lwp[i][j] = float('NaN')
-				ctp[i][j] = float('NaN')
+    #remove fill value of -9999 and replace with np.nan
+    for i in range(len(lwp)):
+        for j in range(len(lwp[i])):
+            if lwp[i][j] == -9999:
+                cod[i][j] = float('NaN')
+                lwp[i][j] = float('NaN')
+                ctp[i][j] = float('NaN')
                 cth[i][j] = float('NaN')
 
-	return np.array(lwp), np.array(cod), np.array(ctp), np.array(cth)
+    return np.array(lwp), np.array(cod), np.array(ctp), np.array(cth)

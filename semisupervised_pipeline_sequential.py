@@ -1,11 +1,13 @@
 import numpy as np
 import os
 import sys
+import time
 
 import create_modis
 import extract_payload
 import modis_l2
-from cloud_mask import get_cloudsat_mask
+from cloud_mask import get_cloud_mask
+from cloudsat import get_cloudsat_mask
 from utils import all_invalid, contain_invalid, fill_all_channels
 
 def semisupervised_pipeline_run(target_filepath, level2_dir, cloudsat_dir, save_dir, verbose=1):
@@ -47,27 +49,37 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudsat_dir, save_
     # as some bands have artefacts, we need to interpolate the missing data - time intensive
     # check if visible channels contain NaNs
     # TODO: check also if daylight or not https://michelanders.blogspot.com/2010/12/calulating-sunrise-and-sunset-in-python.html
-    if all_invalid(np_swath[:2]):
-        save_subdir = save_dir_night
-        # all channels but visible ones
-        fill_all_channels(np_swath[2:])
+    #t1 = time.time()
+    #if all_invalid(np_swath[:2]):
+    #    save_subdir = save_dir_night
+    #    # all channels but visible ones
+    #    fill_all_channels(np_swath[2:13])
 
-    else:
-        save_subdir = save_dir_daylight
-        # all channels but visible ones
-        fill_all_channels(np_swath)
-    
+    #else:
+    #    save_subdir = save_dir_daylight
+    #    # all channels but visible ones
+    #    fill_all_channels(np_swath[:13})
+    #t2 = time.time()
+
+    #if verbose:
+    #    print("Interpolation took {} s".format(t2-t1))
+
     # add in the L2 channels here
     # this includes only LWP, cloud optical depth atm, cloud top pressure
     # these can be filled with NaN, however as they are not being passed to the IRESNET, that is OK
-    lwp, cod, ctp, cth = modis_l2.run(modis_files[0], level2_filepath)
+    lwp, cod, ctp, cth = modis_l2.run(modis_files[0], level2_dir)
 
     # get cloud mask channel
     cm = get_cloud_mask(cloudmask_dirlevel2_dir, target_filepath)
 
     # get cloudsat labels channel
     # last two channels of np_swath correspond to Latitude and Longitude
+    t1 = time.time()
     lm = get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
+    t2 = time.time()
+
+    if verbose:
+        print("Cloudsat alignment took {} s".format(t2 - t1))
 
     # add the arrays to the end as separate channels
     np_swath = np.vstack([np_swath, lwp, cod, ctp, cth, cm, lm])
@@ -96,12 +108,11 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudsat_dir, save_
     if verbose == (2 or 1):
         print("swath {} processed".format(tail))
 
-
 # Hook for bash
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
     semisupervised_pipeline_run(target_filepath,
                                 level2_dir="~/DATA/level_2/",
-                                cloudsat_dir="~/DATA/cc_with_hours/"
+                                cloudsat_dir="~/DATA/cc_with_hours/",
                                 save_dir="~/DATA/semisuper_sequential/",
                                 verbose=1)
