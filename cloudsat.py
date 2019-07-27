@@ -49,8 +49,9 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
         cloudsat_list = pickle.load(f)
 
         # convert pickle to numpy array. The first two dims correspond to latitude and longitude coordinates, third dim corresponds to labels and may contain multiple values
-        cloudsat = np.array([[c[0] for c in cloudsat_list[i]] for i in range(2)])
-        cloudsat.vstack([cloudsat_list[2]])
+        # TODO: keep all labels
+        cloudsat = np.array([[max(c[0]) for c in cloudsat_list[i]] for i in range(3)])
+        # cloudsat.vstack([cloudsat_list[2]])
 
     cloudsat_mask = align(cloudsat, latitudes, longitudes)
 

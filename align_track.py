@@ -7,18 +7,18 @@ def eudis5(v1, v2):
     dist = [(a - b)**2 for a, b in zip(v1, v2)]
     #dist = math.sqrt(sum(dist))
     return dist
-    
+
 def align(track_points, swath_lat, swath_lon):
-    p = track_points.shape[0]
+    p = track_points.shape[1]
     n = swath_lat.shape[0]
     m = swath_lat.shape[1]
     swath_lat = swath_lat.reshape((n,m,1))
     swath_lon = swath_lon.reshape((n,m,1))
     labels = np.zeros((n,m,8,p))
     # change track points to numpys
-    L  = track_points[:,0].reshape((1,1,p))
-    LA = track_points[:,1].reshape((1,1,p))
-    LO = track_points[:,2].reshape((1,1,p))
+    L  = track_points[2]
+    LA = track_points[0]
+    LO = track_points[1]
     LA_dists = (LA - swath_lat)**2
     LO_dists = (LO - swath_lon)**2
     both = np.sqrt(LA_dists + LO_dists)
@@ -45,7 +45,7 @@ def align(track_points, swath_lat, swath_lon):
     labels = np.argmax(np.sum(labels,axis=3),axis=2)
     return labels
 
-if __name__ == "__name__":
+if __name__ == "__main__":
 
     # example
     test_lat = np.array([[8., 10., 12.],
@@ -59,10 +59,9 @@ if __name__ == "__name__":
                          [12.9, 22.9, 34.4], 
                          [14.2, 26.1, 35.5], 
                          [15.4, 28.9, 36.6]])
-        
-    points   = np.array([[1, 8.7, 11.1], 
-                         [3, 9.1, 18.4],
-                         [7, 10.1,39.1],
-                         [6, 13.7,45.9]])
 
-    labels = align(points, test_lat, test_lon)
+    test_track = np.array([[8.7, 9.1, 10.1, 13.7], [11.1, 18.4, 39.1, 45.9], [1, 3, 7, 6]])
+
+    labels = align(test_track, test_lat, test_lon)
+
+    print(labels)

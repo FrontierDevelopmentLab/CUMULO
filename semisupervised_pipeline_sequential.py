@@ -8,10 +8,11 @@ import modis_l2
 from cloud_mask import get_cloudsat_mask
 from utils import all_invalid, contain_invalid, fill_all_channels
 
-def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir, save_dir, verbose=1):
+def semisupervised_pipeline_run(target_filepath, level2_dir, cloudsat_dir, save_dir, verbose=1):
     """
     :param target_filepath: the filepath of the radiance (MOD02) input file
-    :param level2_filepath: the filepath of the aqua_level2 input file
+    :param level2_dir: the root directory of l2 level files
+    :param cloudsat_dir: the root directory of cloudsat pkl files
     :param save_dir:
     :param verbose: verbosity switch: 0 - silent, 1 - verbose, 2 - partial, only prints confirmation at end
     :return: none
@@ -25,7 +26,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     save_dir_daylight = os.path.join(save_dir_swath, "daylight")
     save_dir_night = os.path.join(save_dir_swath, "night")
 
-    for dr in [save_dir_swath, save_dir_daylight, save_dir_night]:
+    for dr in [save_dir_daylight, save_dir_night]:
         if not os.path.exists(dr):
             os.makedirs(dr)
 
@@ -45,7 +46,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
 
     # as some bands have artefacts, we need to interpolate the missing data - time intensive
     # check if visible channels contain NaNs
-    # TODO: check also if daylight or not
+    # TODO: check also if daylight or not https://michelanders.blogspot.com/2010/12/calulating-sunrise-and-sunset-in-python.html
     if all_invalid(np_swath[:2]):
         save_subdir = save_dir_night
         # all channels but visible ones
@@ -62,7 +63,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     lwp, cod, ctp, cth = modis_l2.run(modis_files[0], level2_filepath)
 
     # get cloud mask channel
-    cm = get_cloud_mask(cloudmask_dir, target_filepath)
+    cm = get_cloud_mask(cloudmask_dirlevel2_dir, target_filepath)
 
     # get cloudsat labels channel
     # last two channels of np_swath correspond to Latitude and Longitude
@@ -100,6 +101,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
     semisupervised_pipeline_run(target_filepath,
-                                level2_filepath="/mnt/disks/disk4/l2_aqua_flattened",
-                                save_dir="../DATA/pipeline_output/190725_unsupervised_run_1_aqua_sequential",
+                                level2_dir="~/DATA/level_2/",
+                                cloudsat_dir="~/DATA/cc_with_hours/"
+                                save_dir="~/DATA/semisuper_sequential/",
                                 verbose=1)
