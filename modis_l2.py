@@ -24,8 +24,6 @@ def get_matching_l2_filename(radiance_filename, l2_dir):
     tail_parts = tail.split('.')
     head_parts = head.split('/')
     
-    print(os.path.join(l2_dir, head_parts[-3], head_parts[-2], head_parts[-1], 'MYD06_L2.{}.{}.*.hdf'.format(tail_parts[1], tail_parts[2])))
-    
     l2_filename = glob.glob(os.path.join(l2_dir, head_parts[-3], head_parts[-2], head_parts[-1], 'MYD06_L2.{}.{}.*.hdf'.format(tail_parts[1], tail_parts[2])))[0]
     return l2_filename
 

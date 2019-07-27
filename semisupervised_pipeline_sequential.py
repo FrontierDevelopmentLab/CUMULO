@@ -10,10 +10,11 @@ from cloud_mask import get_cloud_mask
 from cloudsat import get_cloudsat_mask
 from utils import all_invalid, contain_invalid, fill_all_channels
 
-def semisupervised_pipeline_run(target_filepath, level2_dir, cloudsat_dir, save_dir, verbose=1):
+def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir, save_dir, verbose=1):
     """
     :param target_filepath: the filepath of the radiance (MOD02) input file
     :param level2_dir: the root directory of l2 level files
+    :param cloudmask_dir: the root directory to cloud mask files
     :param cloudsat_dir: the root directory of cloudsat pkl files
     :param save_dir:
     :param verbose: verbosity switch: 0 - silent, 1 - verbose, 2 - partial, only prints confirmation at end
@@ -70,7 +71,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudsat_dir, save_
     l2_channels = modis_l2.run(target_filepath, level2_dir)
 
     # get cloud mask channel
-    cm = get_cloud_mask(level2_dir, target_filepath)
+    cm = get_cloud_mask(cloudmask_dir, target_filepath)
 
     # get cloudsat labels channel
     # last two channels of np_swath correspond to Latitude and Longitude
@@ -113,6 +114,7 @@ if __name__ == "__main__":
     target_filepath = sys.argv[1]
     semisupervised_pipeline_run(target_filepath,
                                 level2_dir="../DATA/level_2/",
+                                cloudmask_dir="../DATA/cloud_mask/",
                                 cloudsat_dir="../DATA/cc_with_hours/",
                                 save_dir="../DATA/semisuper_sequential/",
                                 verbose=1)
