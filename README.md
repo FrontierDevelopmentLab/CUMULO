@@ -28,6 +28,7 @@ pip install gcsfs
 pip install satpy
 pip install satpy[modis_l1b]
 conda install -c conda-forge pyhdf  #The pip install's wheels are broken at time of writing
+pip install python-geotiepoints
 ```
 
 There are also standard data science libraries used (`Numpy`, `Pandas` etc...). These are not fully described for brevity.
