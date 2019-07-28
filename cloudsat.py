@@ -64,7 +64,7 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
         # cloudsat.vstack([cloudsat_list[2]])
 
     track_points = get_interest_track(cloudsat, latitudes, longitudes)
-    print(track_points)
+    print(track_points.shape)
     cloudsat_mask = scalable_align(track_points, latitudes, longitudes)
 
     return cloudsat_mask    

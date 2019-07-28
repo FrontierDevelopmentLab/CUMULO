@@ -50,20 +50,19 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     # as some bands have artefacts, we need to interpolate the missing data - time intensive
     # check if visible channels contain NaNs
     # TODO: check also if daylight or not https://michelanders.blogspot.com/2010/12/calulating-sunrise-and-sunset-in-python.html
-    #t1 = time.time()
-    #if all_invalid(np_swath[:2]):
-    #    save_subdir = save_dir_night
-    #    # all channels but visible ones
-    #    fill_all_channels(np_swath[2:13])
+    t1 = time.time()
+    if all_invalid(np_swath[:2]):
+        save_subdir = save_dir_night
+        # all channels but visible ones
+        fill_all_channels(np_swath[2:13])
 
-    #else:
-    #    save_subdir = save_dir_daylight
-    #    # all channels but visible ones
-    #    fill_all_channels(np_swath[:13})
-    #t2 = time.time()
+    else:
+        save_subdir = save_dir_daylight
+        fill_all_channels(np_swath[:13])
+    t2 = time.time()
 
-    #if verbose:
-    #    print("Interpolation took {} s".format(t2-t1))
+    if verbose:
+        print("Interpolation took {} s".format(t2-t1))
 
     # add in the L2 channels here
     # this includes only LWP, cloud optical depth atm, cloud top pressure
@@ -89,8 +88,9 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
         print("Cloudsat alignment took {} s".format(t2 - t1))
 
     # add the arrays to the end as separate channels
-    np_swath = np.vstack([np_swath, l2_channels, cm, lm])
-    assert np_swath.shape[0] == 21, "wrong number of channels"
+    np_swath = np.vstack([np_swath, l2_channels, cm[None,], lm[None,]])
+
+    assert np_swath.shape[0] == 20, "wrong number of channels"
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
     swath_savepath_str = os.path.join(save_subdir, "swath", tail.replace(".hdf", ".npy"))

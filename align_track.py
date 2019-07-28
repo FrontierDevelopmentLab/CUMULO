@@ -22,7 +22,7 @@ def scalable_align(track_points, swath_lat, swath_lon, slice_size=700):
     p = len(L)
 
     for i in range(0, p, slice_size):
-        print(i)
+        
         curr_p = min(i+slice_size, p)
         both = np.sqrt((LA[i:curr_p] - swath_lat)**2 + (LO[i:curr_p] - swath_lon)**2)
 
