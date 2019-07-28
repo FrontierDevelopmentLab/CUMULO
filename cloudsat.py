@@ -39,6 +39,16 @@ def get_cloudsat_filename(l1_filename, cloudsat_dir):
 
     return os.path.join(cloudsat_dir, "{}{}_{}.pkl".format(str_month_day, pkl_hour, pkl_minutes))
 
+def get_interest_track(track_points, latitudes, longitudes):
+
+    min_lat = np.min(latitudes)
+    max_lat = np.max(latitudes)
+
+    min_lon = np.min(longitudes)
+    max_lon = np.max(longitudes)
+
+    return track_points[:, np.logical_and.reduce([[track_points[0] > min_lat], [track_points[0] < max_lat], [track_points[1] > min_lon], [track_points[1] < max_lon]]).squeeze()]
+
 def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
 
     cloudsat_filename = get_cloudsat_filename(l1_filename, cloudsat_dir)
@@ -53,6 +63,8 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
         cloudsat = np.array([[c[0] for c in cloudsat_list[i]] for i in range(3)])
         # cloudsat.vstack([cloudsat_list[2]])
 
-    cloudsat_mask = scalable_align(cloudsat, latitudes, longitudes)
+    track_points = get_interest_track(cloudsat, latitudes, longitudes)
+    print(track_points)
+    cloudsat_mask = scalable_align(track_points, latitudes, longitudes)
 
     return cloudsat_mask    
