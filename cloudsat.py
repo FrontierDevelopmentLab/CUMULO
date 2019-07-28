@@ -4,7 +4,7 @@ import numpy as np
 import os
 import pickle
 
-from align_track import align
+from align_track import scalable_align
 
 def get_month_day(day, year):
     """ Returns month and day given a day of a year"""
@@ -53,6 +53,6 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
         cloudsat = np.array([[c[0] for c in cloudsat_list[i]] for i in range(3)])
         # cloudsat.vstack([cloudsat_list[2]])
 
-    cloudsat_mask = align(cloudsat, latitudes, longitudes)
+    cloudsat_mask = scalable_align(cloudsat, latitudes, longitudes)
 
     return cloudsat_mask    
