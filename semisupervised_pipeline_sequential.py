@@ -26,8 +26,8 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
 
     # creating the save directories
     save_dir_swath = os.path.join(save_dir, "swath")
-    save_dir_daylight = os.path.join(save_dir_swath, "daylight")
-    save_dir_night = os.path.join(save_dir_swath, "night")
+    save_dir_daylight = os.path.join(save_dir_swath, "daylight", "swath")
+    save_dir_night = os.path.join(save_dir_swath, "night", "swath")
 
     for dr in [save_dir_daylight, save_dir_night]:
         if not os.path.exists(dr):
@@ -50,19 +50,19 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     # as some bands have artefacts, we need to interpolate the missing data - time intensive
     # check if visible channels contain NaNs
     # TODO: check also if daylight or not https://michelanders.blogspot.com/2010/12/calulating-sunrise-and-sunset-in-python.html
-    #t1 = time.time()
-    #if all_invalid(np_swath[:2]):
-    #    save_subdir = save_dir_night
-    #    # all channels but visible ones
-    #    fill_all_channels(np_swath[2:13])
+    t1 = time.time()
+    if all_invalid(np_swath[:2]):
+        save_subdir = save_dir_night
+        # all channels but visible ones
+        fill_all_channels(np_swath[2:13])
 
-    #else:
-    #    save_subdir = save_dir_daylight
-    #    fill_all_channels(np_swath[:13])
-    #t2 = time.time()
+    else:
+        save_subdir = save_dir_daylight
+        fill_all_channels(np_swath[:13])
+    t2 = time.time()
 
-    #if verbose:
-    #    print("Interpolation took {} s".format(t2-t1))
+    if verbose:
+        print("Interpolation took {} s".format(t2-t1))
 
     # add in the L2 channels here
     # this includes only LWP, cloud optical depth atm, cloud top pressure
@@ -95,7 +95,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     assert np_swath.shape[0] == 20, "wrong number of channels"
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
-    swath_savepath_str = os.path.join(save_subdir, "swath", tail.replace(".hdf", ".npy"))
+    swath_savepath_str = os.path.join(save_subdir, tail.replace(".hdf", ".npy"))
     np.save(swath_savepath_str, np_swath, allow_pickle=False)
 
     if verbose:
@@ -107,12 +107,16 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     if verbose:
         print("tiles and metadata extracted from swath {}".format(tail))
 
-    # create the save filepaths for the payload and metadata, and save the npys
-    tiles_savepath_str = os.path.join(save_subdir, "tiles", tail.replace(".hdf", ".npy"))
-    metadata_savepath_str = os.path.join(save_subdir, "metadata", tail.replace(".hdf", ".npy"))
+    tiles_savepath_str = os.path.join(save_subdir, "tiles")
+    metadata_savepath_str = os.path.join(save_subdir, "metadata")
 
-    np.save(tiles_savepath_str, tiles, allow_pickle=False)
-    np.save(metadata_savepath_str, metadata, allow_pickle=False)
+    # create the save filepaths for the payload and metadata, and save the npys
+    for dr in [tiles_savepath_str, metadata_savepath_str]:
+        if not os.path.exists(dr):
+            os.makedirs(dr)
+
+    np.save(os.path.join(tiles_savepath_str, tail.replace(".hdf", ".npy")), tiles, allow_pickle=False)
+    np.save(os.path.join(metadata_savepath_str, tail.replace(".hdf", ".npy")), metadata, allow_pickle=False)
 
     if verbose == (2 or 1):
         print("swath {} processed".format(tail))
