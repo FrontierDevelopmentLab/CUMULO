@@ -50,19 +50,19 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     # as some bands have artefacts, we need to interpolate the missing data - time intensive
     # check if visible channels contain NaNs
     # TODO: check also if daylight or not https://michelanders.blogspot.com/2010/12/calulating-sunrise-and-sunset-in-python.html
-    t1 = time.time()
-    if all_invalid(np_swath[:2]):
-        save_subdir = save_dir_night
-        # all channels but visible ones
-        fill_all_channels(np_swath[2:13])
+    #t1 = time.time()
+    #if all_invalid(np_swath[:2]):
+    #    save_subdir = save_dir_night
+    #    # all channels but visible ones
+    #    fill_all_channels(np_swath[2:13])
 
-    else:
-        save_subdir = save_dir_daylight
-        fill_all_channels(np_swath[:13])
-    t2 = time.time()
+    #else:
+    #    save_subdir = save_dir_daylight
+    #    fill_all_channels(np_swath[:13])
+    #t2 = time.time()
 
-    if verbose:
-        print("Interpolation took {} s".format(t2-t1))
+    #if verbose:
+    #    print("Interpolation took {} s".format(t2-t1))
 
     # add in the L2 channels here
     # this includes only LWP, cloud optical depth atm, cloud top pressure
@@ -88,6 +88,8 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
         print("Cloudsat alignment took {} s".format(t2 - t1))
 
     # add the arrays to the end as separate channels
+    print(np_swath.shape, l2_channels.shape, cm.shape, lm.shape)
+    print(np.sum(lm != 0))
     np_swath = np.vstack([np_swath, l2_channels, cm[None,], lm[None,]])
 
     assert np_swath.shape[0] == 20, "wrong number of channels"
@@ -119,8 +121,8 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
     semisupervised_pipeline_run(target_filepath,
-                                level2_dir="../DATA/level_2/",
-                                cloudmask_dir="../DATA/cloud_mask/",
-                                cloudsat_dir="../DATA/cc_with_hours/",
-                                save_dir="../DATA/semisuper_sequential/",
+                                level2_dir="../DATA/aqua-data/level_2/",
+                                cloudmask_dir="../DATA/aqua-data/cloud_mask/",
+                                cloudsat_dir="../DATA/aqua-data/collocated_classes/cc_with_hours/",
+                                save_dir="../DATA/semisuper-sequential/",
                                 verbose=1)

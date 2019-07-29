@@ -63,6 +63,7 @@ def align(track_points, swath_lat, swath_lon):
     #unique, counts = np.unique(both_RC, return_counts=True, axis=1)
     locs = np.concatenate((both_indsR[np.newaxis,:],both_indsC[np.newaxis,:],L.reshape((1,p)),np.arange(p).reshape((1,p))),0)
     locs = locs.astype(int)
+    print(locs.shape)
     inds = np.ravel_multi_index(locs, (n,m,8,p))
     labels[locs[0,:],locs[1,:],locs[2,:],locs[3,:]] = 1
     labels = np.argmax(np.sum(labels,axis=3),axis=2)

@@ -4,7 +4,7 @@ import numpy as np
 import os
 import pickle
 
-from align_track import scalable_align
+from align_track import scalable_align, align
 
 def get_month_day(day, year):
     """ Returns month and day given a day of a year"""
@@ -47,7 +47,7 @@ def get_interest_track(track_points, latitudes, longitudes):
     min_lon = np.min(longitudes)
     max_lon = np.max(longitudes)
 
-    return track_points[:, np.logical_and.reduce([[track_points[0] > min_lat], [track_points[0] < max_lat], [track_points[1] > min_lon], [track_points[1] < max_lon]]).squeeze()]
+    return track_points[:, np.logical_and.reduce([[track_points[0] >= min_lat], [track_points[0] <= max_lat], [track_points[1] >= min_lon], [track_points[1] <= max_lon]]).squeeze()]
 
 def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
 
@@ -62,9 +62,17 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
         # TODO: keep all labels
         cloudsat = np.array([[c[0] for c in cloudsat_list[i]] for i in range(3)])
         # cloudsat.vstack([cloudsat_list[2]])
+    # focus only on central part of the swath
+    
+    cs_range = (950, 1150)
+    lat, lon = latitudes[cs_range[0]:cs_range[1]].copy(), longitudes[cs_range[0]:cs_range[1]].copy()
 
     track_points = get_interest_track(cloudsat, latitudes, longitudes)
-    print(track_points.shape)
-    cloudsat_mask = scalable_align(track_points, latitudes, longitudes)
+    cloudsat_mask = scalable_align(track_points, lat, lon)
+    print(np.sum(track_points[2] != 0), np.sum(cloudsat_mask != 0))
+    
+    # go back to initial swath size
+    ext_cloudsat_mask = np.zeros(latitudes.shape)
+    ext_cloudsat_mask[cs_range[0]:cs_range[1], :] = cloudsat_mask
 
-    return cloudsat_mask    
+    return ext_cloudsat_mask    
