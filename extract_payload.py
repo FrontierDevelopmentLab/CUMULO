@@ -168,7 +168,7 @@ def striding_tile_extract_from_file(swath_array, file_path, tile_size=3, stride=
     return [payload_array, metadata]
 
 
-def sample_random_where_clouds(swath_array, file_path, number_of_labels, tile_size=3, stride=1):
+def extract_random_sample_where_clouds(swath_array, file_path, number_of_labels, tile_size=3, stride=3):
     """
     :param swath_array: input numpy array from MODIS
     :param file_path: the original filepath, for verbose functions
@@ -272,12 +272,38 @@ def sample_random_where_clouds(swath_array, file_path, number_of_labels, tile_si
     return [payload_array, metadata]
 
 
-def extract_labels(swath_array, tile_size=3):
+def extract_label_tiles(swath_array, file_path, tile_size=3):
     """
     :param swath_array: input swath, WITH labels as the last channel
+    :param file_path: name of the input swath - for providing context to errors
     :param tile_size: the size of the channels
     :return: nested list of extracted tile and metadata
     """
+    _, tail = os.path.split(file_path)
+
+    nullcheck = (lambda x: np.isnan(x).any())
+
+    filecheck_nans = nullcheck(swath_array)
+    if filecheck_nans:
+        print("WARNING: {} nan check failed".format(tail))
+
+        non_nan_in_array = np.count_nonzero(~np.isnan(swath_array))
+        elements_in_array = len(swath_array.flatten())
+
+        print("{} is {}% complete".format(tail, (non_nan_in_array / elements_in_array) * 100))
+
+    _, tail = os.path.split(file_path)
+
+    nullcheck = (lambda x: np.isnan(x).any())
+
+    filecheck_nans = nullcheck(swath_array)
+    if filecheck_nans:
+        print("WARNING: {} nan check failed".format(tail))
+
+        non_nan_in_array = np.count_nonzero(~np.isnan(swath_array))
+        elements_in_array = len(swath_array.flatten())
+
+        print("{} is {}% complete".format(tail, (non_nan_in_array / elements_in_array) * 100))
 
     offset = tile_size // 2
     offset_2 = offset
@@ -289,8 +315,8 @@ def extract_labels(swath_array, tile_size=3):
 
     label_channel_test_query = np.where(swath_array[-1] > 8)
     length_check = len(label_channel_test_query[0])
-    assert not length_check, "Expected values lower than 9 in the last channel: " \
-                             "Are you sure the last channel is labels?"
+    assert not length_check, "Expected values in {} lower than 9 in the last channel: "\
+                             "Are you sure the last channel is labels?".format(tail)
 
     label_indexes = np.where(swath_array[-1] > 0)
 
@@ -322,3 +348,28 @@ def extract_labels(swath_array, tile_size=3):
     payload_array = np.stack(payload)
 
     return [payload_array, metadata]
+
+
+def extract_labels_and_cloud_tiles(swath_array, file_path, tile_size=3, stride=3):
+    """
+    :param swath_array: numpy of a swath
+    :param file_path: filepath to original hdf - for contextualising errors
+    :param tile_size: size of tile (default 3)
+    :param stride: space between tiles (
+    :return: nested list of [labelled payload, unlabelled payload, labelled meta, unlabelled meta]
+    """
+
+    labelled_payload, labelled_metadata = extract_label_tiles(swath_array=swath_array,
+                                                              file_path=file_path,
+                                                              tile_size=tile_size)
+
+    number_of_labels = len(labelled_payload)
+
+    unlabelled_payload, unlabelled_metadata = extract_random_sample_where_clouds(
+        swath_array=swath_array,
+        file_path=file_path,
+        number_of_labels=number_of_labels,
+        tile_size=tile_size,
+        stride=stride)
+
+    return [labelled_payload, unlabelled_payload, labelled_metadata, unlabelled_metadata]
