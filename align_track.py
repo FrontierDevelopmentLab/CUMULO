@@ -29,19 +29,19 @@ def scalable_align(track_points, swath_lat, swath_lon, slice_size=700):
         indices = np.unravel_index(np.argmin(both.reshape(-1, curr_p - i), axis=0), (n, m))
         labels[indices] = L[i:curr_p]
 
-    return labels
+    return labels.astype(int)
 
 def align(track_points, swath_lat, swath_lon):
-    p = track_points.shape[0]
+    p = track_points.shape[1]
     n = swath_lat.shape[0]
     m = swath_lat.shape[1]
     swath_lat = swath_lat.reshape((n,m,1))
     swath_lon = swath_lon.reshape((n,m,1))
     labels = np.zeros((n,m))
     # change track points to numpys
-    L  = track_points[:,2].reshape((1,p))
-    LA = track_points[:,0].reshape((1,1,p))
-    LO = track_points[:,1].reshape((1,1,p))
+    L  = track_points[2].reshape((1,p))
+    LA = track_points[0].reshape((1,1,p))
+    LO = track_points[1].reshape((1,1,p))
     LA_dists = (LA - swath_lat)**2
     LO_dists = (LO - swath_lon)**2
     both = np.sqrt(LA_dists + LO_dists)
@@ -51,9 +51,8 @@ def align(track_points, swath_lat, swath_lon):
     locs = np.concatenate((both_indsR[np.newaxis,:],both_indsC[np.newaxis,:]),0)
     inds = np.ravel_multi_index(locs, (n,m))
     labels[locs[0,:],locs[1,:]] = L
-    labels = labels.astype(int)
 
-    return labels
+    return labels.astype(int)
 
 def align_most_frequent(track_points, swath_lat, swath_lon):
     p = track_points.shape[1]
