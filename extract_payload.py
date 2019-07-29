@@ -270,3 +270,55 @@ def sample_random_where_clouds(swath_array, file_path, number_of_labels, tile_si
     payload_array = np.stack(payload)
 
     return [payload_array, metadata]
+
+
+def extract_labels(swath_array, tile_size=3):
+    """
+    :param swath_array: input swath, WITH labels as the last channel
+    :param tile_size: the size of the channels
+    :return: nested list of extracted tile and metadata
+    """
+
+    offset = tile_size // 2
+    offset_2 = offset
+
+    if not tile_size % 2:
+        offset_2 = offset + 1
+
+    swath_bands, _, __ = swath_array.shape
+
+    label_channel_test_query = np.where(swath_array[-1] > 8)
+    length_check = len(label_channel_test_query[0])
+    assert not length_check, "Expected values lower than 9 in the last channel: " \
+                             "Are you sure the last channel is labels?"
+
+    label_indexes = np.where(swath_array[-1] > 0)
+
+    vertical_pos = label_indexes[1]
+    horizontal_pos = label_indexes[0]
+
+    payload = []
+    metadata = []
+
+    for i in range(len(vertical_pos)):
+
+        bands_in_tile = []
+
+        for band in range(swath_bands):
+            tile = swath_array[band,
+                               vertical_pos - offset: vertical_pos + offset_2 + 1,
+                               horizontal_pos - offset: horizontal_pos + offset_2 + 1
+                               ]
+
+            bands_in_tile.append(tile)
+
+        tile_metadata = [
+            (vertical_pos - offset, vertical_pos + offset_2 + 1),
+            (horizontal_pos - offset, horizontal_pos + offset_2 + 1)]
+
+        metadata.append(tile_metadata)
+        payload.append(bands_in_tile)
+
+    payload_array = np.stack(payload)
+
+    return [payload_array, metadata]
