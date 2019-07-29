@@ -26,8 +26,8 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
 
     # creating the save directories
     save_dir_swath = os.path.join(save_dir, "swath")
-    save_dir_daylight = os.path.join(save_dir_swath, "daylight", "swath")
-    save_dir_night = os.path.join(save_dir_swath, "night", "swath")
+    save_dir_daylight = os.path.join(save_dir_swath, "daylight")
+    save_dir_night = os.path.join(save_dir_swath, "night")
 
     for dr in [save_dir_daylight, save_dir_night]:
         if not os.path.exists(dr):
