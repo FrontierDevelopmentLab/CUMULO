@@ -98,22 +98,18 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     
     lm_glob_query = "CC.{}.{}.npy".format(year_day_part, time_part)
     matching_cloud_mask = glob.glob(os.path.join(cloudsat_dir, lm_glob_query))
+
     try:
         lm = np.load(matching_cloud_mask[0])
+        np_swath = np.vstack([np_swath, l2_channels, cm[None, ], lm[None, ]])
     except IndexError:
         save_subdir = save_dir_fucked
+        np_swath = np.vstack([np_swath, l2_channels, cm[None, ]])
         print("file {} has no matching cloudmask".format(tail))
     t2 = time.time()
 
     if verbose:
         print("Cloudsat alignment took {} s".format(t2 - t1))
-
-    # add the arrays to the end as separate channels
-    print(np_swath.shape, l2_channels.shape, cm.shape, lm.shape)
-    print(np.sum(lm != 0))
-    np_swath = np.vstack([np_swath, l2_channels, cm[None, ], lm[None, ]])
-
-    assert np_swath.shape[0] == 20, "wrong number of channels"
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
     swath_savepath_str = os.path.join(save_subdir, tail.replace(".hdf", ".npy"))
@@ -121,6 +117,8 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
 
     if verbose:
         print("swath {} saved".format(tail))
+    if save_subdir == save_dir_fucked:
+        exit(0)
 
     # sample the swath for a selection of tiles and its associated metadata
     label_tiles, nonlabel_tiles, label_metadata, nonlabel_metadata = \

@@ -79,9 +79,9 @@ def get_swath(files):
 	# note that we only take til 1350 to avoid any bowtie effects
 	for comp in composite:
 		temp = np.array(global_scene[comp].load())
-		dump_array.append(temp[:, :1350])
-	dump_array.append(latitude[:, :1350])
-	dump_array.append(longitude[:, :1350])
+		dump_array.append(temp[:2030, :1350])
+	dump_array.append(latitude[:2030, :1350])
+	dump_array.append(longitude[:2030, :1350])
 
 	return np.array(dump_array)
 
@@ -93,6 +93,6 @@ def get_swath_rgb(radiance_filename, geoloc_filename):
 	# load it in, make sure resolution is 1000 to match our other datasets
 	global_scene.load([composite_name], resolution=1000)
 	# chop off the final 4 at the end use [:, :, :1350]
-	rgb = np.array(global_scene[composite_name])[:,:,:1350].T
+	rgb = np.array(global_scene[composite_name])[:,:2030,:1350].T
 
 	return rgb

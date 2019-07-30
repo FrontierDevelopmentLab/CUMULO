@@ -283,7 +283,7 @@ def extract_label_tiles(swath_array, file_path, tile_size=3):
     if not tile_size % 2:
         offset_2 = offset + 1
 
-    swath_bands, _, __ = swath_array.shape
+    swath_bands, swath_length, _ = swath_array.shape
 
     label_channel_test_query = np.where(swath_array[-1] > 9)
     length_check = len(label_channel_test_query[0])
@@ -298,7 +298,17 @@ def extract_label_tiles(swath_array, file_path, tile_size=3):
     payload = []
     metadata = []
 
+
+
     for i in range(len(vertical_pos)):
+
+        if horizontal_pos[i] < (offset):
+            continue
+
+        if horizontal_pos[i] > (swath_length - (offset_2)):
+            continue
+
+
 
         bands_in_tile = []
 

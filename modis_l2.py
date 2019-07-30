@@ -35,9 +35,9 @@ def run(l1_filename, l2_dir):
 
     level_data = SD(filename, SDC.READ)
 
-    lwp = level_data.select('Cloud_Water_Path').get()[:,:1350].tolist()
-    cod = level_data.select('Cloud_Optical_Thickness').get()[:,:1350].tolist()
-    ctp = level_data.select('cloud_top_pressure_1km').get()[:,:1350].tolist()
+    lwp = level_data.select('Cloud_Water_Path').get()[:2030,:1350].tolist()
+    cod = level_data.select('Cloud_Optical_Thickness').get()[:2030,:1350].tolist()
+    ctp = level_data.select('cloud_top_pressure_1km').get()[:2030,:1350].tolist()
     
     channels = np.stack([lwp, cod, ctp])
     
