@@ -98,7 +98,11 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     
     lm_glob_query = "CC.{}.{}.npy".format(year_day_part, time_part)
     matching_cloud_mask = glob.glob(os.path.join(cloudsat_dir, lm_glob_query))
-    lm = np.load(matching_cloud_mask[0])
+    try:
+        lm = np.load(matching_cloud_mask[0])
+    except IndexError:
+        save_subdir = save_dir_fucked
+        print("file {} has no matching cloudmask".format(tail))
     t2 = time.time()
 
     if verbose:
