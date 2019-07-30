@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import glob
+import pdb
 
 import create_modis
 import extract_payload
@@ -94,9 +95,10 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     parts = tail.split(".")
     year_day_part = parts[1]
     time_part = parts[2]
+    
     lm_glob_query = "CC.{}.{}.npy".format(year_day_part, time_part)
-    matching_cloud_mask = glob.glob("{}/{}".format(cloudsat_dir, lm_glob_query))
-    lm = np.load(matching_cloud_mask)
+    matching_cloud_mask = glob.glob(os.path.join(cloudsat_dir, lm_glob_query))
+    lm = np.load(matching_cloud_mask[0])
     t2 = time.time()
 
     if verbose:

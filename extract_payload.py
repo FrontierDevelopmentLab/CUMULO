@@ -313,7 +313,7 @@ def extract_label_tiles(swath_array, file_path, tile_size=3):
 
     swath_bands, _, __ = swath_array.shape
 
-    label_channel_test_query = np.where(swath_array[-1] > 8)
+    label_channel_test_query = np.where(swath_array[-1] > 9)
     length_check = len(label_channel_test_query[0])
     assert not length_check, "Expected values in {} lower than 9 in the last channel: "\
                              "Are you sure the last channel is labels?".format(tail)
