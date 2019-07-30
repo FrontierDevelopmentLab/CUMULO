@@ -179,24 +179,12 @@ def extract_random_sample_where_clouds(swath_array, file_path, number_of_labels,
     The script will use a cloud_mask channel ([-2]) to mask away all non-cloudy data. The script will then randomly
     select a number of tiles (:param number of labels) from the cloudy areas.
     """
+
     _, tail = os.path.split(file_path)
 
     nullcheck = (lambda x: np.isnan(x).any())
-
+    
     swath_bands, swath_length, swath_breadth = swath_array.shape
-
-    filecheck_nans = nullcheck(swath_array)
-    if filecheck_nans:
-        print("WARNING: {} nan check failed".format(tail))
-
-        non_nan_in_array = np.count_nonzero(~np.isnan(swath_array))
-        elements_in_array = len(swath_array.flatten())
-
-        print("{} is {}% complete".format(tail, (non_nan_in_array / elements_in_array) * 100))
-
-    _, tail = os.path.split(file_path)
-
-    nullcheck = (lambda x: np.isnan(x).any())
 
     filecheck_nans = nullcheck(swath_array)
     if filecheck_nans:
@@ -217,17 +205,17 @@ def extract_random_sample_where_clouds(swath_array, file_path, number_of_labels,
     metadata = []
 
     lower_breadth_range = np.arange(start=(offset + 1),
-                                    stop=(swath_breadth // 2 - (offset + 1)),
+                                    stop=(swath_breadth // 2 - (offset_2 + 1)),
                                     step=stride)
 
     upper_breadth_range = np.arange(start=(swath_breadth // 2 + (offset + 1)),
-                                    stop=(swath_breadth - (offset + 1)),
+                                    stop=(swath_breadth - (offset_2 + 1)),
                                     step=stride)
 
     horizontal_pixels = np.append(lower_breadth_range, upper_breadth_range)
 
     vertical_pixels = np.arange(start=(offset + 1),
-                                stop=(swath_length - (offset + 1)),
+                                stop=(swath_length - (offset_2 + 1)),
                                 step=stride)
 
     masks = []
@@ -248,24 +236,20 @@ def extract_random_sample_where_clouds(swath_array, file_path, number_of_labels,
     chosen_random_tile_positions = masked_array[:number_of_labels]
 
     for coord in chosen_random_tile_positions:
-        vertical_pos = coord[0]
-        horizontal_pos = coord[1]
+        vertical_pos = coord[1]
+        horizontal_pos = coord[0]
 
-        bands_in_tile = []
-        for band in range(swath_bands):
-            tile = swath_array[band,
-                               vertical_pos - offset: vertical_pos + offset_2 + 1,
-                               horizontal_pos - offset: horizontal_pos + offset_2 + 1
-                               ]
-
-            bands_in_tile.append(tile)
+        tile = swath_array[:,
+                           horizontal_pos - offset: horizontal_pos + offset_2 + 1,
+                           vertical_pos - offset: vertical_pos + offset_2 + 1
+                          ]
 
         tile_metadata = [
-            (vertical_pos - offset, vertical_pos + offset_2 + 1),
-            (horizontal_pos - offset, horizontal_pos + offset_2 + 1)]
+            (horizontal_pos - offset, horizontal_pos + offset_2 + 1),
+            (vertical_pos - offset, vertical_pos + offset_2 + 1)]
 
-        metadata.append(tile_metadata)
-        payload.append(bands_in_tile)
+        metadata.append(tile_metadata)        
+        payload.append(tile)
 
     payload_array = np.stack(payload)
 
@@ -332,15 +316,15 @@ def extract_label_tiles(swath_array, file_path, tile_size=3):
 
         for band in range(swath_bands):
             tile = swath_array[band,
-                               vertical_pos[i] - offset: vertical_pos[i] + offset_2 + 1,
-                               horizontal_pos[i] - offset: horizontal_pos[i] + offset_2 + 1
+                               horizontal_pos[i] - offset: horizontal_pos[i] + offset_2 + 1,
+                               vertical_pos[i] - offset: vertical_pos[i] + offset_2 + 1
                                ]
 
             bands_in_tile.append(tile)
 
         tile_metadata = [
-            (vertical_pos[i] - offset, vertical_pos[i] + offset_2 + 1),
-            (horizontal_pos[i] - offset, horizontal_pos[i] + offset_2 + 1)]
+            (horizontal_pos[i] - offset, horizontal_pos[i] + offset_2 + 1),
+            (vertical_pos[i] - offset, vertical_pos[i] + offset_2 + 1)]
 
         metadata.append(tile_metadata)
         payload.append(bands_in_tile)

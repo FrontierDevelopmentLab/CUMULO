@@ -56,19 +56,19 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     # TODO: check also if daylight or not
     #  https://michelanders.blogspot.com/2010/12/calulating-sunrise-and-sunset-in-python.html
     t1 = time.time()
-    try:
-        if all_invalid(np_swath[:2]):
-            save_subdir = save_dir_night
-            # all channels but visible ones
-            fill_all_channels(np_swath[2:13])
+    #try:
+    #    if all_invalid(np_swath[:2]):
+    #        save_subdir = save_dir_night
+    #        # all channels but visible ones
+    #        fill_all_channels(np_swath[2:13])
 
-        else:
-            save_subdir = save_dir_daylight
-            fill_all_channels(np_swath[:13])
+    #    else:
+    #        save_subdir = save_dir_daylight
+    #        fill_all_channels(np_swath[:13])
 
-    except ValueError:
-        save_subdir = save_dir_fucked
-
+    #except ValueError:
+    #    save_subdir = save_dir_fucked
+    save_subdir = save_dir_fucked
     t2 = time.time()
 
     if verbose:
