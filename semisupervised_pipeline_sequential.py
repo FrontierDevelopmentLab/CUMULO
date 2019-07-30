@@ -30,8 +30,9 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     save_dir_swath = os.path.join(save_dir, "swath")
     save_dir_daylight = os.path.join(save_dir_swath, "daylight")
     save_dir_night = os.path.join(save_dir_swath, "night")
+    save_dir_fucked = os.path.join(save_dir_swath, "fucked")
 
-    for dr in [save_dir_daylight, save_dir_night]:
+    for dr in [save_dir_daylight, save_dir_night, save_dir_fucked]:
         if not os.path.exists(dr):
             os.makedirs(dr)
 
@@ -54,18 +55,23 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     # TODO: check also if daylight or not
     #  https://michelanders.blogspot.com/2010/12/calulating-sunrise-and-sunset-in-python.html
     t1 = time.time()
-    if all_invalid(np_swath[:2]):
-        save_subdir = save_dir_night
-        # all channels but visible ones
-        fill_all_channels(np_swath[2:13])
+    try:
+        if all_invalid(np_swath[:2]):
+            save_subdir = save_dir_night
+            # all channels but visible ones
+            fill_all_channels(np_swath[2:13])
 
-    else:
-        save_subdir = save_dir_daylight
-        fill_all_channels(np_swath[:13])
+        else:
+            save_subdir = save_dir_daylight
+            fill_all_channels(np_swath[:13])
+
+    except ValueError:
+        save_subdir = save_dir_fucked
+
     t2 = time.time()
 
     if verbose:
-        print("Interpolation took {} s".format(t2-t1))
+            print("Interpolation took {} s".format(t2-t1))
 
     # add in the L2 channels here
     # this includes only LWP, cloud optical depth atm, cloud top pressure
