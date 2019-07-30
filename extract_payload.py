@@ -254,15 +254,16 @@ def extract_random_sample_where_clouds(swath_array, file_path, number_of_labels,
         bands_in_tile = []
         for band in range(swath_bands):
             tile = swath_array[band,
-                               vertical_pos - offset: vertical_pos + offset_2 + 1,
-                               horizontal_pos - offset: horizontal_pos + offset_2 + 1
+                               horizontal_pos - offset: horizontal_pos + offset_2 + 1,
+                               vertical_pos - offset: vertical_pos + offset_2 + 1
+
                                ]
 
             bands_in_tile.append(tile)
 
         tile_metadata = [
-            (vertical_pos - offset, vertical_pos + offset_2 + 1),
-            (horizontal_pos - offset, horizontal_pos + offset_2 + 1)]
+            (horizontal_pos - offset, horizontal_pos + offset_2 + 1),
+            (vertical_pos - offset, vertical_pos + offset_2 + 1)]
 
         metadata.append(tile_metadata)
         payload.append(bands_in_tile)
@@ -313,7 +314,7 @@ def extract_label_tiles(swath_array, file_path, tile_size=3):
 
     swath_bands, _, __ = swath_array.shape
 
-    label_channel_test_query = np.where(swath_array[-1] > 8)
+    label_channel_test_query = np.where(swath_array[-1] > 9)
     length_check = len(label_channel_test_query[0])
     assert not length_check, "Expected values in {} lower than 9 in the last channel: "\
                              "Are you sure the last channel is labels?".format(tail)
@@ -332,15 +333,15 @@ def extract_label_tiles(swath_array, file_path, tile_size=3):
 
         for band in range(swath_bands):
             tile = swath_array[band,
-                               vertical_pos[i] - offset: vertical_pos[i] + offset_2 + 1,
-                               horizontal_pos[i] - offset: horizontal_pos[i] + offset_2 + 1
+                               horizontal_pos[i] - offset: horizontal_pos[i] + offset_2 + 1,
+                               vertical_pos[i] - offset: vertical_pos[i] + offset_2 + 1
                                ]
 
             bands_in_tile.append(tile)
 
         tile_metadata = [
-            (vertical_pos[i] - offset, vertical_pos[i] + offset_2 + 1),
-            (horizontal_pos[i] - offset, horizontal_pos[i] + offset_2 + 1)]
+            (horizontal_pos[i] - offset, horizontal_pos[i] + offset_2 + 1),
+            (vertical_pos[i] - offset, vertical_pos[i] + offset_2 + 1)]
 
         metadata.append(tile_metadata)
         payload.append(bands_in_tile)
