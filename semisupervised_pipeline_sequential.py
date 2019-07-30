@@ -2,6 +2,7 @@ import numpy as np
 import os
 import sys
 import time
+import glob
 
 import create_modis
 import extract_payload
@@ -9,6 +10,7 @@ import modis_l2
 from cloud_mask import get_cloud_mask
 from cloudsat import get_cloudsat_mask
 from utils import all_invalid, contain_invalid, fill_all_channels
+
 
 def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir, save_dir, verbose=1):
     """
@@ -49,7 +51,8 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
 
     # as some bands have artefacts, we need to interpolate the missing data - time intensive
     # check if visible channels contain NaNs
-    # TODO: check also if daylight or not https://michelanders.blogspot.com/2010/12/calulating-sunrise-and-sunset-in-python.html
+    # TODO: check also if daylight or not
+    #  https://michelanders.blogspot.com/2010/12/calulating-sunrise-and-sunset-in-python.html
     t1 = time.time()
     if all_invalid(np_swath[:2]):
         save_subdir = save_dir_night
@@ -81,7 +84,13 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     # get cloudsat labels channel
     # last two channels of np_swath correspond to Latitude and Longitude
     t1 = time.time()
-    lm = get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
+    # lm = get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
+    parts = tail.split(".")
+    year_day_part = parts[1]
+    time_part = parts[2]
+    lm_glob_query = "CC.{}.{}.npy".format(year_day_part, time_part)
+    matching_cloud_mask = glob.glob("{}/{}".format(cloudsat_dir, lm_glob_query))
+    lm = np.load(matching_cloud_mask)
     t2 = time.time()
 
     if verbose:
@@ -90,7 +99,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     # add the arrays to the end as separate channels
     print(np_swath.shape, l2_channels.shape, cm.shape, lm.shape)
     print(np.sum(lm != 0))
-    np_swath = np.vstack([np_swath, l2_channels, cm[None,], lm[None,]])
+    np_swath = np.vstack([np_swath, l2_channels, cm[None, ], lm[None, ]])
 
     assert np_swath.shape[0] == 20, "wrong number of channels"
 
@@ -102,24 +111,38 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
         print("swath {} saved".format(tail))
 
     # sample the swath for a selection of tiles and its associated metadata
-    tiles, metadata = extract_payload.striding_tile_extract_from_file(np_swath, target_filepath, tile_size=3, stride=3)
+    label_tiles, nonlabel_tiles, label_metadata, nonlabel_metadata = \
+        extract_payload.extract_labels_and_cloud_tiles(np_swath, target_filepath, tile_size=3, stride=3)
 
     if verbose:
         print("tiles and metadata extracted from swath {}".format(tail))
 
-    tiles_savepath_str = os.path.join(save_subdir, "tiles")
-    metadata_savepath_str = os.path.join(save_subdir, "metadata")
+    label_tiles_savepath_str = os.path.join(save_subdir, "label", "tiles")
+    label_metadata_savepath_str = os.path.join(save_subdir, "label", "metadata")
+
+    nonlabel_tiles_savepath_str = os.path.join(save_subdir, "nonlabel", "tiles")
+    nonlabel_metadata_savepath_str = os.path.join(save_subdir, "nonlabel", "metadata")
 
     # create the save filepaths for the payload and metadata, and save the npys
-    for dr in [tiles_savepath_str, metadata_savepath_str]:
+    for dr in [label_tiles_savepath_str,
+               label_metadata_savepath_str,
+               nonlabel_tiles_savepath_str,
+               nonlabel_metadata_savepath_str]:
         if not os.path.exists(dr):
             os.makedirs(dr)
 
-    np.save(os.path.join(tiles_savepath_str, tail.replace(".hdf", ".npy")), tiles, allow_pickle=False)
-    np.save(os.path.join(metadata_savepath_str, tail.replace(".hdf", ".npy")), metadata, allow_pickle=False)
+    np.save(os.path.join(label_tiles_savepath_str, tail.replace(".hdf", ".npy")),
+            label_tiles, allow_pickle=False)
+    np.save(os.path.join(nonlabel_metadata_savepath_str, tail.replace(".hdf", ".npy")),
+            label_metadata, allow_pickle=False)
+    np.save(os.path.join(label_tiles_savepath_str, tail.replace(".hdf", ".npy")),
+            nonlabel_tiles, allow_pickle=False)
+    np.save(os.path.join(nonlabel_metadata_savepath_str, tail.replace(".hdf", ".npy")),
+            nonlabel_metadata, allow_pickle=False)
 
     if verbose == (2 or 1):
         print("swath {} processed".format(tail))
+
 
 # Hook for bash
 if __name__ == "__main__":
@@ -127,6 +150,6 @@ if __name__ == "__main__":
     semisupervised_pipeline_run(target_filepath,
                                 level2_dir="../DATA/aqua-data/level_2/",
                                 cloudmask_dir="../DATA/aqua-data/cloud_mask/",
-                                cloudsat_dir="../DATA/aqua-data/collocated_classes/cc_with_hours/",
+                                cloudsat_dir="../DATA/aqua-data/labelled_arrays/",
                                 save_dir="../DATA/semisuper-sequential/",
                                 verbose=1)
