@@ -263,18 +263,6 @@ def extract_label_tiles(swath_array, file_path, tile_size=3):
     :param tile_size: the size of the channels
     :return: nested list of extracted tile and metadata
     """
-    _, tail = os.path.split(file_path)
-
-    nullcheck = (lambda x: np.isnan(x).any())
-
-    filecheck_nans = nullcheck(swath_array)
-    if filecheck_nans:
-        print("WARNING: {} nan check failed".format(tail))
-
-        non_nan_in_array = np.count_nonzero(~np.isnan(swath_array))
-        elements_in_array = len(swath_array.flatten())
-
-        print("{} is {}% complete".format(tail, (non_nan_in_array / elements_in_array) * 100))
 
     _, tail = os.path.split(file_path)
 
