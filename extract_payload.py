@@ -254,15 +254,16 @@ def extract_random_sample_where_clouds(swath_array, file_path, number_of_labels,
         bands_in_tile = []
         for band in range(swath_bands):
             tile = swath_array[band,
-                               vertical_pos - offset: vertical_pos + offset_2 + 1,
-                               horizontal_pos - offset: horizontal_pos + offset_2 + 1
+                               horizontal_pos - offset: horizontal_pos + offset_2 + 1,
+                               vertical_pos - offset: vertical_pos + offset_2 + 1
+
                                ]
 
             bands_in_tile.append(tile)
 
         tile_metadata = [
-            (vertical_pos - offset, vertical_pos + offset_2 + 1),
-            (horizontal_pos - offset, horizontal_pos + offset_2 + 1)]
+            (horizontal_pos - offset, horizontal_pos + offset_2 + 1),
+            (vertical_pos - offset, vertical_pos + offset_2 + 1)]
 
         metadata.append(tile_metadata)
         payload.append(bands_in_tile)
@@ -332,15 +333,15 @@ def extract_label_tiles(swath_array, file_path, tile_size=3):
 
         for band in range(swath_bands):
             tile = swath_array[band,
-                               vertical_pos[i] - offset: vertical_pos[i] + offset_2 + 1,
-                               horizontal_pos[i] - offset: horizontal_pos[i] + offset_2 + 1
+                               horizontal_pos[i] - offset: horizontal_pos[i] + offset_2 + 1,
+                               vertical_pos[i] - offset: vertical_pos[i] + offset_2 + 1
                                ]
 
             bands_in_tile.append(tile)
 
         tile_metadata = [
-            (vertical_pos[i] - offset, vertical_pos[i] + offset_2 + 1),
-            (horizontal_pos[i] - offset, horizontal_pos[i] + offset_2 + 1)]
+            (horizontal_pos[i] - offset, horizontal_pos[i] + offset_2 + 1),
+            (vertical_pos[i] - offset, vertical_pos[i] + offset_2 + 1)]
 
         metadata.append(tile_metadata)
         payload.append(bands_in_tile)
