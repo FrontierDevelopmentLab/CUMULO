@@ -4,18 +4,21 @@ import glob
 import os
 import sys
 
-def get_cloud_mask(cloud_mask_dir, level_1_filename):
+def get_cloud_mask(level_1_filename, cloud_mask_dir):
+    
+    """ return a 2d mask, with cloudy pixels marked as 1, non-cloudy pixels marked as 0 """
     
     head, tail = os.path.split(level_1_filename)
     head_parts = head.split("/")
 
     cloud_mask_filename = glob.glob(os.path.join(cloud_mask_dir, head_parts[-3], head_parts[-2], head_parts[-1], '*' + level_1_filename.split('.A')[1][:12] + '*'))[0]
-
-    swath = Scene(reader = 'modis_l2', filenames = [cloud_mask_filename, level_1_filename])
+    
+    # satpy returns(0=Cloudy, 1=Uncertain, 2=Probably Clear, 3=Confident Clear)
+    swath = Scene(reader = 'modis_l2', filenames = [cloud_mask_filename])
     swath.load(['cloud_mask'], resolution = 1000)
-
+    
     cloud_mask = np.array(swath['cloud_mask'].load())[:2030, :1350]
-    cloud_mask = cloud_mask > 0
+    cloud_mask = (cloud_mask == 0)
     cloud_mask = cloud_mask.astype(int)
     
     return cloud_mask
