@@ -2,31 +2,32 @@ import numpy as np
 import math
 import pdb
 
+from sklearn.metrics.pairwise import manhattan_distances
+
 # fast euclidean distance computation: https://stackoverflow.com/questions/37794849/efficient-and-precise-calculation-of-the-euclidean-distance
 def eudis5(v1, v2):
     dist = [(a - b)**2 for a, b in zip(v1, v2)]
     #dist = math.sqrt(sum(dist))
     return dist
 
-def scalable_align(track_points, swath_lat, swath_lon, slice_size=700):
+def scalable_align(track, swath_lat, swath_lon, slice_size=700):
 
     (n, m) = swath_lat.shape
     labels = np.zeros((n, m))
 
-    swath_lat = swath_lat[..., np.newaxis]
-    swath_lon = swath_lon[..., np.newaxis]  
+    swath_points = np.stack((swath_lat.flatten(), swath_lon.flatten())).T
+    track_points = track[:2].T
 
-    L  = track_points[2]
-    LA = track_points[0]
-    LO = track_points[1]
+    L  = track[2]
+
     p = len(L)
 
     for i in range(0, p, slice_size):
         
         curr_p = min(i+slice_size, p)
-        both = np.sqrt((LA[i:curr_p] - swath_lat)**2 + (LO[i:curr_p] - swath_lon)**2)
+        dist = manhattan_distances(swath_points, track_points[i:i+curr_p])
 
-        indices = np.unravel_index(np.argmin(both.reshape(-1, curr_p - i), axis=0), (n, m))
+        indices = np.unravel_index(np.argmin(dist, axis=0), (n, m))
         labels[indices] = L[i:curr_p]
 
     return labels.astype(int)

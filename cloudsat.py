@@ -64,8 +64,8 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
         # cloudsat.vstack([cloudsat_list[2]])
     # focus only on central part of the swath
     
-    cs_range = (950, 1080)
-    lat, lon = latitudes[cs_range[0]:cs_range[1]].copy(), longitudes[cs_range[0]:cs_range[1]].copy()
+    cs_range = (850, 890)
+    lat, lon = latitudes[:, cs_range[0]:cs_range[1]].copy(), longitudes[:, cs_range[0]:cs_range[1]].copy()
 
     track_points = get_interest_track(cloudsat, lat, lon)
     cloudsat_mask = scalable_align(track_points, lat, lon)
