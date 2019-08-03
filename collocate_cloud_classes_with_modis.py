@@ -5,12 +5,14 @@ import glob
 import datetime
 import sys
 import cloudsat_tools
+import time as t
 from satpy import Scene
+import matplotlib.pyplot as plt
 from deco import synchronized, concurrent
 
-modis_aux_dir = '/mnt/disks/disk6/modis_aux/'
-cloudsat_classes = '/mnt/disks/disk6/cloudsat_CC/cloudsat_CC/'
-modis_l1_dir = '/mnt/disks/disk6/l1_aqua/2008/01/01/02/'
+modis_aux_dir = '/mnt/disks/sdb/modis_aux/'
+cloudsat_classes = '/mnt/disks/sdb/cloudsat_CC/cloudsat_CC/'
+modis_l1_dir = '/mnt/disks/sdb/l1_aqua/2008/01/01/'
 couldntdo = []
 
 def get_date(filename):
@@ -18,15 +20,28 @@ def get_date(filename):
     date = datetime.datetime(year = 2008, month = 1, day = 1, hour = int(date[7:9]), minute = int(date[9:11])) + datetime.timedelta(days = int(date[4:7]) -1)
     return date
 
+
 def nearest_modis_time(date):
-    minute = date.minute
-    closest = ((minute / 5) * 5)
-    date = date.replace(minute = closest)
-    return date
+        minute = int(date.minute)
+        closest = (5 * round(minute/5))
+        if closest < minute:
+                closest += 5
+        if (closest%5) != 0:
+                raise ValueError('Minute in nearest modis time is not divisible by 5')
+        if closest > 59:
+                hour = date.hour
+                date = date + datetime.timedelta(seconds = (60 * (closest - minute)))
+                print(date, 'went over the hour')
+        else:
+            date = date.replace(minute = int(closest))
+        print(date, minute, 'new date and old minute')
+        if date.minute%5 != 0 :
+            print('You messed up rolling over the hour')
+            raise Exception
+        return date
 
 #@concurrent
 def save_collocated_cloudsat(filename):
-	global modis_l1_dir, cloudsat_classes
 	diy = filename.split('2008')[1][:3]
 	identifier = filename.split('/')[-1].split('_')[0]
 	date = get_date(filename)
@@ -42,61 +57,71 @@ def save_collocated_cloudsat(filename):
 	#time in seconds
 	aux_data = HDF.HDF(filename)
 	time = cloudsat_tools.get_1D_var(aux_data, 'Profile_time')
-
 	#load in the cloud classes for this granule
 	cloudsat_filename = glob.glob(cloudsat_classes + identifier + '*.hdf')[0]
 	cloudsat_sd = SD(cloudsat_filename, SDC.READ)
 	classes = cloudsat_sd.select('CloudLayerType').get()
 	start_points = []
 	end_points = []
+	#get the start and end points by finding where the index for mati is 1
 	for i in range(len(mati)):
 		if mati[i] == 1:
 			if (i not in start_points) and ((i - 1) not in start_points) and ((i-2) not in start_points):
 				if len(start_points) >= 1:
 					end_points.append(i-1)
 				start_points.append(i)
-
+	#the final end point will be the end
+	end_points.append(-1)
 	for start, end in zip(start_points, end_points):
 		#modis time
-		modis_time = nearest_modis_time(date + datetime.timedelta(seconds = int(time[start][0])))
+		modis_time = nearest_modis_time(date + datetime.timedelta(seconds = int(time[start][0] - 60)))
+		print(modis_time.hour, modis_time.minute,'modis time')
+		t.sleep(10)
 		#format output
 		format_output_string = '.A2008{}.{}'.format(diy, modis_time.strftime('%H%M'))
 		test_filename = glob.glob(modis_l1_dir + '*' + format_output_string + '*.hdf')
-		print test_filename
-		swath = Scene(reader = 'modis_l1b', filenames = test_filename)
-		swath.load(['latitude', 'longitude'], resolution = 1000)
-		lat = np.array(swath['latitude'].load())[:, :1350]
-		lon = np.array(swath['longitude'].load())[:, :1350]
-		#technically modis-aux can go up to 2040 and 1354 since these are acceptable sizes of modis swaths. cut down at the end to 2030 x 1350
-		false_array = np.zeros((2040, 1354))
-
-		for lat_index, cc, pixel_lon in zip(mati[start:end], classes[start:end], modis_lon[start:end]):
-			lat_index = lat_index - 1
-			search_along = lon[lat_index][870:880]
-			lon_index = min([(abs(l-pixel_lon), n) for n, l in enumerate(search_along)])[1] + 870
-			cc = list(set([c for c in cc if c != 0]))
-			if len(cc) > 1:
-				cc = [9]
-			if len(cc) == 0:
-				cc = [0]
-			false_array[lat_index][lon_index] = cc[0]
-		false_array = false_array[:2030, :1350]
-		output_name = 'CC' + format_output_string + '.npy'
-		np.save('/home/jupyter/labelled_arrays/'+ output_name, false_array)		
+		print(test_filename)
+        #only run if we have 2 filenames becuase we need both MYD021 and MYD03 to run Scene()
+		if len(test_filename) == 2:
+			swath = Scene(reader = 'modis_l1b', filenames = test_filename)
+			swath.load(['latitude', 'longitude'], resolution = 1000)
+			lat = np.array(swath['latitude'].load())
+			lon = np.array(swath['longitude'].load())
+			#technically modis-aux can go up to 2040 and 1354 since these are acceptable sizes of modis swaths. cut down at the end to 2030 x 1350
+			false_array = np.zeros((2040, 1354, 8))
+			#for each lat index in mati find the lon index of the pixel and place there
+			for lat_index, cc, pixel_lon, pixel_lat in zip(mati[start:end], classes[start:end], modis_lon[start:end], modis_lat[start:end]):
+				#lat index of mati starts at 1 so you need to -1 to make 0 index
+				lat_index = lat_index - 1
+				search_along = lon[lat_index][800:900]
+				lon_index = min([(abs(l-pixel_lon), n) for n, l in enumerate(search_along)])[1] + 800
+				counts = [0 for count_n in range(8)]
+				print(lat[lat_index][lon_index], pixel_lat)
+				cc = cc.tolist()
+				for c in range(8):
+					counts[c] = cc.count(c + 1)
+				false_array[lat_index][lon_index] = counts
+			false_array = false_array[:2030, :1350, :]
+			output_name = 'CC' + format_output_string + '.npy'
+			np.save('temp/'+ output_name, false_array)	
 	return
+	
+def trycatch(modaux):
+	try:
+		save_collocated_cloudsat(modaux)
+	except IndexError:
+		print('you suck couldnt do', modaux)
+		couldntdo.append(modaux)
 
 #@synchronized
 def run(filenames):
 	for modis_aux_filename in filenames:
-		print modis_aux_filename
-		try:
-			save_collocated_cloudsat(modis_aux_filename)
-		except:
-			couldntdo.append(modis_aux_filename)
+		print(modis_aux_filename)
+		trycatch(modis_aux_filename)
 	return
 
 
-run_filenames = sorted(glob.glob(modis_aux_dir + '200800*.hdf'))
+run_filenames = sorted(glob.glob(modis_aux_dir + '2008001*.hdf'))
 
-run(run_filenames)
-print couldntdo
+run(run_filenames[10:11])
+#print(couldntdo, 'couldnt do you suck')
