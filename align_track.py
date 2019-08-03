@@ -13,7 +13,7 @@ def eudis5(v1, v2):
 def scalable_align(track, swath_lat, swath_lon, slice_size=700):
 
     (n, m) = swath_lat.shape
-    labels = np.zeros((n, m))
+    labels = np.full((n, m), np.nan)
 
     swath_points = np.stack((swath_lat.flatten(), swath_lon.flatten())).T
     track_points = track[:2].T
@@ -25,12 +25,12 @@ def scalable_align(track, swath_lat, swath_lon, slice_size=700):
     for i in range(0, p, slice_size):
         
         curr_p = min(i+slice_size, p)
-        dist = manhattan_distances(swath_points, track_points[i:i+curr_p])
+        dist = manhattan_distances(swath_points, track_points[i:curr_p])
 
         indices = np.unravel_index(np.argmin(dist, axis=0), (n, m))
         labels[indices] = L[i:curr_p]
 
-    return labels.astype(int)
+    return labels
 
 def align(track_points, swath_lat, swath_lon):
     p = track_points.shape[1]

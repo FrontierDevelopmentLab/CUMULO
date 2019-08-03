@@ -64,21 +64,25 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
         # cloudsat.vstack([cloudsat_list[2]])
     # focus only on central part of the swath
     
-    cs_range = (850, 890)
+    cs_range = (700, 1000)
     lat, lon = latitudes[:, cs_range[0]:cs_range[1]].copy(), longitudes[:, cs_range[0]:cs_range[1]].copy()
 
-    track_points = get_interest_track(cloudsat, lat, lon)
+    track_points = get_interest_track(cloudsat, latitudes, longitudes)
     cloudsat_mask = scalable_align(track_points, lat, lon)
     print(np.sum(track_points[2] != 0), np.sum(cloudsat_mask != 0))
     
     # go back to initial swath size
-    ext_cloudsat_mask = np.zeros(latitudes.shape)
-    ext_cloudsat_mask[cs_range[0]:cs_range[1], :] = cloudsat_mask
+    ext_cloudsat_mask = np.full(latitudes.shape, np.nan)
+    ext_cloudsat_mask[:, cs_range[0]:cs_range[1]] = cloudsat_mask
 
     return ext_cloudsat_mask    
 
 
 if __name__ == "__main__":
+
+    import sys
+    
+    import create_modis
 
     target_filepath = sys.argv[1]
     head, tail = os.path.split(target_filepath)
@@ -93,8 +97,7 @@ if __name__ == "__main__":
     # find a corresponding geolocational (MOD03) file for the provided radiance (MOD02) file
     geoloc_filepath = create_modis.find_matching_geoloc_file(target_filepath)
 
-    if verbose:
-        print("geoloc found: {}".format(geoloc_filepath))
+    print("geoloc found: {}".format(geoloc_filepath))
 
     # pull a numpy array from the hdfs, now that we have both radiance and geolocational files
     np_swath = create_modis.get_swath(target_filepath, geoloc_filepath)
@@ -103,4 +106,4 @@ if __name__ == "__main__":
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
     savepath = os.path.join(save_dir, tail.replace(".hdf", ".npy"))
-    np.save(savepath, np_swath, allow_pickle=False)
+    np.save(savepath, lm, allow_pickle=False)
