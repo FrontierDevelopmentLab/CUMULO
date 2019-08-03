@@ -76,3 +76,31 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
     ext_cloudsat_mask[cs_range[0]:cs_range[1], :] = cloudsat_mask
 
     return ext_cloudsat_mask    
+
+
+if __name__ == "__main__":
+
+    target_filepath = sys.argv[1]
+    head, tail = os.path.split(target_filepath)
+
+    cloudsat_dir="../DATA/aqua-data/collocated_classes/cc_with_hours/"
+
+    save_dir = "./test-align/"
+
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    # find a corresponding geolocational (MOD03) file for the provided radiance (MOD02) file
+    geoloc_filepath = create_modis.find_matching_geoloc_file(target_filepath)
+
+    if verbose:
+        print("geoloc found: {}".format(geoloc_filepath))
+
+    # pull a numpy array from the hdfs, now that we have both radiance and geolocational files
+    np_swath = create_modis.get_swath(target_filepath, geoloc_filepath)
+
+    lm = get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
+
+    # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
+    savepath = os.path.join(save_dir, tail.replace(".hdf", ".npy"))
+    np.save(savepath, np_swath, allow_pickle=False)
