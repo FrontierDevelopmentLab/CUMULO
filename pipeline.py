@@ -29,33 +29,15 @@ def save_swath_rbgs(radiance_filepath, save_dir, verbose=1):
     # find a corresponding geolocational (MOD03) file for the provided radiance (MOD02) file
     geoloc_filepath = find_matching_geoloc_file(radiance_filepath)
 
-    if verbose:
-        print("geoloc found: {}".format(geoloc_filepath))
-
     visual_swath = get_swath_rgb(radiance_filepath, geoloc_filepath)
-    try:
-        print(visual_swath.shape)
-    except:
-        raise ValueError("swath has no shape")
-    
-    png = Image.fromarray(visual_swath.astype(np.uint8), mode="RGB")
 
     #interpolate to remove NaN artefacts
     fill_all_channels(visual_swath)
 
-    # checking if the interpolation is successful
-    new_array = np.ma.masked_invalid(np_swath)
-    if not contain_invalid(new_array):
-        if verbose:
-            print("swath {} interpolated".format(tail))
-        pass
-    else:
-        raise ValueError("swath did not interpolate successfully")
-
-    pil_loaded_visual_swath = Image.fromarray(visual_swath)
+    pil_loaded_visual_swath = Image.fromarray(visual_swath.astype(np.uint8), mode="RGB")
 
     save_filename = os.path.join(save_dir, basename.replace(".hdf", ".png"))
-    png.save(save_filename)
+    pil_loaded_visual_swath.save(save_filename)
 
     if verbose:
         print("swath {} processed".format(tail))

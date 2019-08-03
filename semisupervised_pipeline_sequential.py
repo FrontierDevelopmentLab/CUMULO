@@ -44,8 +44,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
         print("geoloc found: {}".format(geoloc_filepath))
 
     # pull a numpy array from the hdfs, now that we have both radiance and geolocational files
-    modis_files = [target_filepath, geoloc_filepath]
-    np_swath = create_modis.get_swath(modis_files)
+    np_swath = create_modis.get_swath(target_filepath, geoloc_filepath)
 
     if verbose:
         print("swath {} loaded".format(tail))
@@ -83,7 +82,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
         print("Level2 channels loaded")
 
     # get cloud mask channel
-    cm = get_cloud_mask(cloudmask_dir, target_filepath)
+    cm = get_cloud_mask(target_filepath, cloudmask_dir)
 
     if verbose:
         print("Cloud mask loaded")

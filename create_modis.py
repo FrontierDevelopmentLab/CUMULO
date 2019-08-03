@@ -52,7 +52,7 @@ def get_modis_filenames(path):
 	return matches
 
 
-def get_swath(files):
+def get_swath(radiance_filename, geoloc_filename):
 	"""
 	:param files: list of nested paired MOD02 and MOD03 files
 	:return: numpy array of nested bands per MODIS02 file
@@ -65,7 +65,7 @@ def get_swath(files):
 	# load the global scene using satpy
 	# expects filenames to be radiance then geoloc
 	# filenames must be in specific format, chop off beginning to work
-	global_scene = Scene(reader='modis_l1b', filenames=files)
+	global_scene = Scene(reader='modis_l1b', filenames=[radiance_filename, geoloc_filename])
 
 	# print available_composites
 	# expects the composite to be in a list
@@ -93,6 +93,6 @@ def get_swath_rgb(radiance_filename, geoloc_filename):
 	# load it in, make sure resolution is 1000 to match our other datasets
 	global_scene.load([composite_name], resolution=1000)
 	# chop off the final 4 at the end use [:, :, :1350]
-	rgb = np.array(global_scene[composite_name])[:,:2030,:1350].T
+	rgb = np.array(global_scene[composite_name])[:,:2030,:1350].transpose(1, 2, 0)
 
 	return rgb
