@@ -49,6 +49,18 @@ def get_interest_track(track_points, latitudes, longitudes):
 
     return track_points[:, np.logical_and.reduce([[track_points[0] >= min_lat], [track_points[0] <= max_lat], [track_points[1] >= min_lon], [track_points[1] <= max_lon]]).squeeze()]
 
+def list_to_3d_array(list_labels):
+
+    p = len(list_labels)
+    array = np.zeros(p, 8) 
+
+    for i, labels in enumerate(list_labels):
+        for l in labels:
+            array[i][l-1] += 1
+
+    return array
+
+
 def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
 
     cloudsat_filename = get_cloudsat_filename(l1_filename, cloudsat_dir)
@@ -57,17 +69,19 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
         
         # pickle containing three lists, corresponding to latitude, longitude and label
         cloudsat_list = pickle.load(f)
+        print(min(cloudsat[2]), max(cloudsat[2]))
 
         # convert pickle to numpy array. The first two dims correspond to latitude and longitude coordinates, third dim corresponds to labels and may contain multiple values
         # TODO: keep all labels
-        cloudsat = np.array([[c[0] for c in cloudsat_list[i]] for i in range(3)])
-        # cloudsat.vstack([cloudsat_list[2]])
+        cloudsat = np.array([[c[0] for c in cloudsat_list[i]] for i in range(2)])
+        cloudsat.vstack(list_to_3d_array(cloudsat_list[2]))
+        
     # focus only on central part of the swath
     
     cs_range = (700, 1000)
     lat, lon = latitudes[:, cs_range[0]:cs_range[1]].copy(), longitudes[:, cs_range[0]:cs_range[1]].copy()
 
-    track_points = get_interest_track(cloudsat, latitudes, longitudes)
+    track_points = get_interest_track(cloudsat, lat, lon)
     cloudsat_mask = scalable_align(track_points, lat, lon)
     print(np.sum(track_points[2] != 0), np.sum(cloudsat_mask != 0))
     
