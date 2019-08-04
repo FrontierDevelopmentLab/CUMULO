@@ -115,7 +115,7 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
     ext_cloudsat_mask = np.zeros((*(latitudes.shape), 8))
     ext_cloudsat_mask[:, cs_range[0]:cs_range[1], :] = cloudsat_mask
 
-    return ext_cloudsat_mask    
+    return ext_cloudsat_mask.transpose(2, 0, 1)    
 
 
 if __name__ == "__main__":
