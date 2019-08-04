@@ -24,9 +24,12 @@ def scalable_align(track, swath_lat, swath_lon):
   
     dist = manhattan_distances(swath_points, track_points)
     indices = np.unravel_index(np.argmin(dist, axis=0), (n, m))
-    print(indices)
+    
     for i in range(p):
         labels[indices[0][i], indices[1][i]] += L[:, i]
+    
+    labels[0] = 0
+    labels[-1] = 0
 
     return labels
 

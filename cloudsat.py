@@ -86,10 +86,7 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
     
     # go back to initial swath size
     ext_cloudsat_mask = np.zeros((*(latitudes.shape), 8))
-    print(ext_cloudsat_mask.shape)
     ext_cloudsat_mask[:, cs_range[0]:cs_range[1], :] = cloudsat_mask
-
-    print(np.min(ext_cloudsat_mask), np.max(ext_cloudsat_mask))
 
     return ext_cloudsat_mask    
 
@@ -105,7 +102,7 @@ if __name__ == "__main__":
 
     cloudsat_dir="../DATA/aqua-data/collocated_classes/cc_with_hours/"
 
-    save_dir = "./test-align/"
+    save_dir = "../DATA/aqua-data-processed/labelmask/"
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
