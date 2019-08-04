@@ -48,6 +48,8 @@ def get_track_oi(track_points, latitudes, longitudes):
     min_lon = np.min(longitudes)
     max_lon = np.max(longitudes)
 
+    print(min_lat, max_lat, min_lon, max_lon)
+    
     return track_points[:, np.logical_and.reduce([[track_points[0] >= min_lat], [track_points[0] <= max_lat], [track_points[1] >= min_lon], [track_points[1] <= max_lon]]).squeeze()]
 
 def list_to_3d_array(list_labels):
@@ -68,10 +70,10 @@ def find_range(track_points, latitudes, longitudes):
 
     i = random.randint(1, 2028)
 
-    i_lat, i_lon = latitudes[None, i, :], longitudes[None, i, :]
-
+    i_lat, i_lon = latitudes[i-1:i+1, :], longitudes[i-1:i+1, :]
+    
     i_track_points = get_track_oi(track_points, i_lat, i_lon)
-
+    
     i_mask = scalable_align(i_track_points, i_lat, i_lon)
 
     idx_nonzeros = np.where(np.sum(i_mask, 2) != 0)
@@ -97,11 +99,16 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
         cloudsat = np.vstack((cloudsat, list_to_3d_array(cloudsat_list[2])))    
     # focus only on central part of the swath
     
-    cs_range = find_range(track_points, latitudes, longitudes)
-    lat, lon = latitudes[:, cs_range[0]:cs_range[1]].copy(), longitudes[:, cs_range[0]:cs_range[1]].copy()
+    cs_range = find_range(cloudsat, latitudes, longitudes)
+    lat, lon = latitudes[:, cs_range[0]:cs_range[1]], longitudes[:, cs_range[0]:cs_range[1]]
 
     track_points = get_track_oi(cloudsat, lat, lon)
     cloudsat_mask = scalable_align(track_points, lat, lon)
+
+    # remove labels on egdes
+    cloudsat_mask[0] = 0
+    cloudsat_mask[-1] = 0
+
     print("retrieved", np.sum(cloudsat_mask > 0), "labels")
     
     # go back to initial swath size

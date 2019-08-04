@@ -22,3 +22,18 @@ def get_cloud_mask(level_1_filename, cloud_mask_dir):
     cloud_mask = cloud_mask.astype(int)
     
     return cloud_mask
+
+if __name__ == "__main__":
+    
+    l1_path = sys.argv[1]
+    cloudmask_dir = "../DATA/aqua-data/cloud_mask/"
+
+    save_dir = "../DATA/aqua-data-processed/cloudmask/"
+
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    cloudmask = get_cloud_mask(l1_path, cloudmask_dir)
+
+    np.save(os.path.join(save_dir, os.path.basename(l1_path).replace(".hdf", ".npy")), cloudmask)
+

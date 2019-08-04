@@ -27,9 +27,6 @@ def scalable_align(track, swath_lat, swath_lon):
     
     for i in range(p):
         labels[indices[0][i], indices[1][i]] += L[:, i]
-    
-    labels[0] = 0
-    labels[-1] = 0
 
     return labels
 
