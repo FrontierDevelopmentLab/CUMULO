@@ -3,6 +3,7 @@ import glob
 import numpy as np
 import os
 import pickle
+import random
 
 from align_track import scalable_align, align
 
@@ -39,9 +40,8 @@ def get_cloudsat_filename(l1_filename, cloudsat_dir):
 
     return os.path.join(cloudsat_dir, "{}{}_{}.pkl".format(str_month_day, pkl_hour, pkl_minutes))
 
-def get_interest_track(track_points, latitudes, longitudes):
-    
-    print(track_points.shape)
+def get_track_oi(track_points, latitudes, longitudes):
+
     min_lat = np.min(latitudes)
     max_lat = np.max(latitudes)
 
@@ -57,10 +57,30 @@ def list_to_3d_array(list_labels):
 
     for i, labels in enumerate(list_labels):
         for l in labels:
+
+            # keep only cloud types (0 is non-determined or error)
             if l > 0:
                 array[l-1][i] += 1
 
     return array
+
+def find_range(track_points, latitudes, longitudes):
+
+    i = random.randint(1, 2028)
+
+    i_lat, i_lon = latitudes[None, i, :], longitudes[None, i, :]
+
+    i_track_points = get_track_oi(track_points, i_lat, i_lon)
+
+    i_mask = scalable_align(i_track_points, i_lat, i_lon)
+
+    idx_nonzeros = np.where(np.sum(i_mask, 2) != 0)
+
+    min_j, max_j = min(idx_nonzeros[1]), max(idx_nonzeros[1])
+
+    print(min_j, max_j)
+
+    return min_j - 100, max_j + 100
 
 
 def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
@@ -77,10 +97,10 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
         cloudsat = np.vstack((cloudsat, list_to_3d_array(cloudsat_list[2])))    
     # focus only on central part of the swath
     
-    cs_range = (300, 1000)
+    cs_range = find_range(track_points, latitudes, longitudes)
     lat, lon = latitudes[:, cs_range[0]:cs_range[1]].copy(), longitudes[:, cs_range[0]:cs_range[1]].copy()
 
-    track_points = get_interest_track(cloudsat, lat, lon)
+    track_points = get_track_oi(cloudsat, lat, lon)
     cloudsat_mask = scalable_align(track_points, lat, lon)
     print("retrieved", np.sum(cloudsat_mask > 0), "labels")
     
