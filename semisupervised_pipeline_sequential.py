@@ -50,6 +50,21 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
         print("swath {} loaded".format(tail))
         print("swath shape: {}".format(np_swath.shape))
 
+
+    # add in the L2 channels here
+    # this includes only LWP, cloud optical depth atm, cloud top pressure
+    # these can be filled with NaN, however as they are not being passed to the IRESNET, that is OK
+    l2_channels = modis_l2.run(target_filepath, level2_dir)
+    
+    if verbose:
+        print("Level2 channels loaded")
+
+    # get cloud mask channel
+    cm = get_cloud_mask(target_filepath, cloudmask_dir)
+
+    if verbose:
+        print("Cloud mask loaded")
+
     # as some bands have artefacts, we need to interpolate the missing data - time intensive
     # check if visible channels contain NaNs
     # TODO: check also if daylight or not
@@ -73,38 +88,22 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     if verbose:
             print("Interpolation took {} s".format(t2-t1))
 
-    # add in the L2 channels here
-    # this includes only LWP, cloud optical depth atm, cloud top pressure
-    # these can be filled with NaN, however as they are not being passed to the IRESNET, that is OK
-    l2_channels = modis_l2.run(target_filepath, level2_dir)
-    
-    if verbose:
-        print("Level2 channels loaded")
-
-    # get cloud mask channel
-    cm = get_cloud_mask(target_filepath, cloudmask_dir)
-
-    if verbose:
-        print("Cloud mask loaded")
-
     # get cloudsat labels channel
     # last two channels of np_swath correspond to Latitude and Longitude
     t1 = time.time()
-    # lm = get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
-    parts = tail.split(".")
-    year_day_part = parts[1]
-    time_part = parts[2]
-    
-    lm_glob_query = "CC.{}.{}.npy".format(year_day_part, time_part)
-    matching_cloud_mask = glob.glob(os.path.join(cloudsat_dir, lm_glob_query))
 
     try:
-        lm = np.load(matching_cloud_mask[0])
-        np_swath = np.vstack([np_swath, l2_channels, cm[None, ], lm[None, ]])
+
+        lm = get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
+        np_swath = np.vstack([np_swath, l2_channels, cm[None, ], lm])
+
     except IndexError:
+
         save_subdir = save_dir_fucked
         np_swath = np.vstack([np_swath, l2_channels, cm[None, ]])
-        print("file {} has no matching cloudmask".format(tail))
+
+        print("file {} has no matching labelmask".format(tail))
+
     t2 = time.time()
 
     if verbose:
@@ -116,6 +115,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
 
     if verbose:
         print("swath {} saved".format(tail))
+
     if save_subdir == save_dir_fucked:
         exit(0)
 
@@ -152,13 +152,12 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     if verbose == (2 or 1):
         print("swath {} processed".format(tail))
 
-
 # Hook for bash
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
     semisupervised_pipeline_run(target_filepath,
                                 level2_dir="../DATA/aqua-data/level_2/",
                                 cloudmask_dir="../DATA/aqua-data/cloud_mask/",
-                                cloudsat_dir="../DATA/aqua-data/labelled_arrays/",
-                                save_dir="../DATA/semisuper-sequential/",
+                                cloudsat_dir="../DATA/aqua-data/collocated_classes/cc_with_hours/",
+                                save_dir="../DATA/aqua-data-processed/",
                                 verbose=1)
