@@ -18,11 +18,11 @@ def get_cloudsat_filename(l1_filename, cloudsat_dir):
     # 1_3_18_15.pkl cloudsat
 
     time_info = l1_filename.split('MYD021KM.A')[1]
-    year, day = int(time_info[:4]), int(time_info[4:7])
-    month, day = get_month_day(day, year)
+    year, day_s = int(time_info[:4]), int(time_info[4:7])
+    month, day = get_month_day(day_s, year)
     hour, minutes = int(time_info[8:10]), int(time_info[10:12])
 
-    # get all cloudsat pickles of that day
+    # get all cloudsat pickles of that day and of the day before
     str_month_day = "{}_{}_".format(month, day)
     cloudsat_filenames = glob.glob(os.path.join(cloudsat_dir, "{}*.pkl".format(str_month_day)))
     
@@ -34,6 +34,22 @@ def get_cloudsat_filename(l1_filename, cloudsat_dir):
         pkl_hour, pkl_minutes = int(pkl_time[0]), int(pkl_time[1])
 
         if (pkl_hour, pkl_minutes) < (hour, minutes):
+            candidates.append((pkl_hour, pkl_minutes))
+
+    if len(candidates) == 0:
+
+        #look for the pickle of previous day, with latest time
+
+        month, day = get_month_day(day_s-1, year)
+        # get all cloudsat pickles of that day and of the day before
+        str_month_day = "{}_{}_".format(month, day)
+        cloudsat_filenames = glob.glob(os.path.join(cloudsat_dir, "{}*.pkl".format(str_month_day)))
+        
+        for filename in cloudsat_filenames:
+
+            pkl_time = os.path.basename(filename)[len(str_month_day):].replace(".pkl", "").split("_")
+            pkl_hour, pkl_minutes = int(pkl_time[0]), int(pkl_time[1])
+
             candidates.append((pkl_hour, pkl_minutes))
 
     pkl_hour, pkl_minutes = max(candidates)
