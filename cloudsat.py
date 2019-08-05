@@ -33,7 +33,7 @@ def get_cloudsat_filename(l1_filename, cloudsat_dir):
         pkl_time = os.path.basename(filename)[len(str_month_day):].replace(".pkl", "").split("_")
         pkl_hour, pkl_minutes = int(pkl_time[0]), int(pkl_time[1])
 
-        if (pkl_hour, pkl_minutes) < (hour, minutes):
+        if (pkl_hour, pkl_minutes) <= (hour, minutes):
             candidates.append((pkl_hour, pkl_minutes))
 
     if len(candidates) == 0:
