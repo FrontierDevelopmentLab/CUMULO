@@ -95,9 +95,10 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     try:
 
         lm = get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
+        print(np_swath.shape, l2_channels.shape, cm.shape, lm.shape)
         np_swath = np.vstack([np_swath, l2_channels, cm[None, ], lm])
 
-    except IndexError:
+    except:
 
         save_subdir = save_dir_fucked
         np_swath = np.vstack([np_swath, l2_channels, cm[None, ]])
