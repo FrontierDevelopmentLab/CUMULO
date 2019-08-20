@@ -42,8 +42,8 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
     # as some bands have artefacts, we need to interpolate the missing data - time intensive
     t1 = time.time()
     try:
-        # interpolate visible channels.
-        src.interpolation.fill_all_channels(np_swath[:2])    
+        # interpolate visible channel
+        src.interpolation.fill_all_channels(np_swath[0][None, ])    
         save_subdir = save_dir_daylight
 
     except ValueError:
@@ -52,7 +52,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
     
     try:
         # interpolate all other channels
-        src.interpolation.fill_all_channels(np_swath[2:13])
+        src.interpolation.fill_all_channels(np_swath[1:])
 
     except ValueError:
         # too many nans to interpolate values
