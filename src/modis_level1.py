@@ -71,7 +71,7 @@ def get_swath(radiance_filename):
 	swath.append(latitude[:2030, :1350])
 	swath.append(longitude[:2030, :1350])
 
-	return np.array(swath)
+	return np.array(swath, dtype=np.float16)
 
 def get_swath_rgb(radiance_filename, composite='true_color_uncorrected'):
 	"""

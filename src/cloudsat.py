@@ -77,8 +77,6 @@ def get_track_oi(track_points, latitudes, longitudes):
 
     min_lon = np.min(longitudes)
     max_lon = np.max(longitudes)
-
-    print(min_lat, max_lat, min_lon, max_lon)
     
     return track_points[:, np.logical_and.reduce([[track_points[0] >= min_lat], [track_points[0] <= max_lat], [track_points[1] >= min_lon], [track_points[1] <= max_lon]]).squeeze()]
 
@@ -96,10 +94,7 @@ def find_range(track_points, latitudes, longitudes):
 
     min_j, max_j = min(idx_nonzeros[1]), max(idx_nonzeros[1])
 
-    print(min_j, max_j)
-
     return min_j - 100, max_j + 100
-
 
 def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
 
@@ -131,7 +126,7 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
     ext_cloudsat_mask = np.zeros((*(latitudes.shape), 8))
     ext_cloudsat_mask[:, cs_range[0]:cs_range[1], :] = cloudsat_mask
 
-    return ext_cloudsat_mask.transpose(2, 0, 1)    
+    return ext_cloudsat_mask.transpose(2, 0, 1).astype(np.uint8)    
 
 
 if __name__ == "__main__":

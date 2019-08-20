@@ -44,7 +44,7 @@ def get_lwp_cod_ctp(l1_filename, l2_dir):
     # lwp should be positive
     np.where(lwp < 0, np.NaN, channels)
 
-    return channels
+    return channels.astype(np.float16)
 
 def get_cloud_mask(l1_filename, cloud_mask_dir):
     
