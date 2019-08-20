@@ -34,7 +34,7 @@ def save_swath_rbgs(radiance_filepath, save_dir, verbose=1):
     #interpolate to remove NaN artefacts
     fill_all_channels(visual_swath)
 
-    pil_loaded_visual_swath = Image.fromarray(visual_swath.astype(np.uint8), mode="RGB")
+    pil_loaded_visual_swath = Image.fromarray(visual_swath.transpose(1, 2, 0).astype(np.uint8), mode="RGB")
 
     save_filename = os.path.join(save_dir, basename.replace(".hdf", ".png"))
     pil_loaded_visual_swath.save(save_filename)
