@@ -38,28 +38,30 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
 
     if verbose:
         print("swath {} loaded".format(tail))
-        print("type ", np_swath.dtype)
 
     # as some bands have artefacts, we need to interpolate the missing data - time intensive
     t1 = time.time()
     try:
-        if src.interpolation.all_invalid(np_swath[:2]):
-            save_subdir = save_dir_night
-            # interpolate all channels but visible ones
-            src.interpolation.fill_all_channels(np_swath[2:13])
-
-        else:
-            save_subdir = save_dir_daylight
-            src.interpolation.fill_all_channels(np_swath[:13])
+        # interpolate visible channels.
+        src.interpolation.fill_all_channels(np_swath[:2])    
+        save_subdir = save_dir_daylight
 
     except ValueError:
+        # if interpolation fails, data was collacted at night time
+        save_subdir = save_dir_night
+    
+    try:
+        # interpolate all other channels
+        src.interpolation.fill_all_channels(np_swath[2:13])
+
+    except ValueError:
+        # too many nans to interpolate values
         save_subdir = save_dir_fucked
     
     t2 = time.time()
 
     if verbose:
         print("Interpolation took {} s".format(t2-t1))
-        print("type ", np_swath.dtype)
 
     # pull L2 channels here
     # this includes only LWP, cloud optical depth, cloud top pressure in this order
@@ -67,14 +69,12 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
     
     if verbose:
         print("Level2 channels loaded")
-        print("type ", l2_channels.dtype)
 
     # pull cloud mask channel
     cm = src.modis_level2.get_cloud_mask(target_filepath, cloudmask_dir)
 
     if verbose:
         print("Cloud mask loaded")
-        print("type ", cm.dtype)
 
     # get cloudsat labels channel - time intensive
     t1 = time.time()
@@ -93,10 +93,9 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
 
     if verbose:
         print("Cloudsat alignment took {} s".format(t2 - t1))
-        print("type ", np_swath.dtype)
 
     # cast swath values to float
-    np_swath = np_swath.astype(np.float32)
+    np_swath = np_swath.astype(np.float16)
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
     swath_savepath_str = os.path.join(save_subdir, tail.replace(".hdf", ".npy"))
@@ -141,7 +140,7 @@ def extract_tiles_from_swath(np_swath, swath_name, save_dir, tile_size=3, stride
     save_tiles_separately(nonlabel_tiles, swath_name, os.path.join(save_dir, "nonlabel"))
 
     if verbose > 0:
-        print("Extracted tiles from swath {}".format(swath_name))
+        print("tiles extracted from swath {}".format(swath_name))
 
 def save_tiles_separately(tiles, swath_name, save_dir, tile_size=3):
 
