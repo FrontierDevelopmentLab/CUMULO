@@ -121,8 +121,13 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
         exit(0)
 
     # sample the swath for a selection of tiles and its associated metadata
-    label_tiles, nonlabel_tiles, label_metadata, nonlabel_metadata = \
-        extract_payload.extract_labels_and_cloud_tiles(np_swath, target_filepath, tile_size=3, stride=3)
+    try: 
+        label_tiles, nonlabel_tiles, label_metadata, nonlabel_metadata = \
+        extract_payload.extract_labels_and_cloud_tiles(np_swath,
+                target_filepath, tile_size=3, stride=3)
+    except ValueError:
+        print("Tiles failed to extract")
+        exit(0)
 
     if verbose:
         print("tiles and metadata extracted from swath {}".format(tail))
@@ -157,8 +162,8 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
     semisupervised_pipeline_run(target_filepath,
-                                level2_dir="../DATA/aqua-data/level_2/",
-                                cloudmask_dir="../DATA/aqua-data/cloud_mask/",
-                                cloudsat_dir="../DATA/aqua-data/collocated_classes/cc_with_hours/",
-                                save_dir="../DATA/aqua-data-processed/",
+                                level2_dir="/mnt/disks/disk11/aqua-data/level_2",
+                                cloudmask_dir="/mnt/disks/disk11/aqua-data/cloudmask",
+                                cloudsat_dir="/mnt/disks/disk11/aqua-data/CC/cc_with_hours/",
+                                save_dir="/mnt/disks/disk11/190805_run2_month3",
                                 verbose=1)
