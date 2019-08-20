@@ -1,13 +1,12 @@
-from create_modis import get_swath_rgb
 import numpy as np
 from PIL import Image
 import os
 import sys
-from utils  import fill_all_channels, contain_invalid
+from interpolation import fill_all_channels, contain_invalid
 # from scipy.misc import toimage --depreciated, using PILlow
 
 from PIL import Image
-from modis_level1 import get_swath_rgb, find_matching_geoloc_file
+from modis_level1 import get_swath_rgb
 
 def save_swath_rbgs(radiance_filepath, save_dir, verbose=1):
     """
@@ -26,10 +25,7 @@ def save_swath_rbgs(radiance_filepath, save_dir, verbose=1):
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    # find a corresponding geolocational (MOD03) file for the provided radiance (MOD02) file
-    geoloc_filepath = find_matching_geoloc_file(radiance_filepath)
-
-    visual_swath = get_swath_rgb(radiance_filepath, geoloc_filepath)
+    visual_swath = get_swath_rgb(radiance_filepath)
 
     #interpolate to remove NaN artefacts
     fill_all_channels(visual_swath)
@@ -46,4 +42,4 @@ def save_swath_rbgs(radiance_filepath, save_dir, verbose=1):
 # Hook for pipe in
 if __name__ == "__main__":
     target_filepath = sys.argv[1]
-    save_swath_rbgs(target_filepath, save_dir="..DATA/pipeline_output/190723_png_extract", verbose=1)
+    save_swath_rbgs(target_filepath, save_dir="..DATA/aqua-data-processed/RGB/", verbose=1)

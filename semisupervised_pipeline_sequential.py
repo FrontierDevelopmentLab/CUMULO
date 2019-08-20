@@ -2,16 +2,12 @@ import numpy as np
 import os
 import sys
 import time
-import glob
-import pdb
 
-import modis_level1
+import interpolation
+import cloudsat
 import extract_payload
+import modis_level1
 import modis_level2
-from cloud_mask import get_cloud_mask
-from cloudsat import get_cloudsat_mask
-from utils import all_invalid, contain_invalid, fill_all_channels
-
 
 def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir, save_dir, verbose=1):
     """
@@ -25,7 +21,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     Wrapper for the full pipeline. Expects to find a corresponding MOD03 file in the same directory. Comments throughout
     """
 
-    head, tail = os.path.split(target_filepath)
+    _, tail = os.path.split(target_filepath)
 
     # creating the save directories
     save_dir_swath = os.path.join(save_dir, "swath")
@@ -37,14 +33,8 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
         if not os.path.exists(dr):
             os.makedirs(dr)
 
-    # find a corresponding geolocational (MOD03) file for the provided radiance (MOD02) file
-    geoloc_filepath = modis_level1.find_matching_geoloc_file(target_filepath)
-
-    if verbose:
-        print("geoloc found: {}".format(geoloc_filepath))
-
-    # pull a numpy array from the hdfs, now that we have both radiance and geolocational files
-    np_swath = modis_level1.get_swath(target_filepath, geoloc_filepath)
+    # pull a numpy array from the hdfs
+    np_swath = modis_level1.get_swath(target_filepath)
 
     if verbose:
         print("swath {} loaded".format(tail))
@@ -53,14 +43,13 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
 
     # add in the L2 channels here
     # this includes only LWP, cloud optical depth atm, cloud top pressure
-    # these can be filled with NaN, however as they are not being passed to the IRESNET, that is OK
-    l2_channels = modis_level2.run(target_filepath, level2_dir)
+    l2_channels = modis_level2.get_lwp_cod_ctp(target_filepath, level2_dir)
     
     if verbose:
         print("Level2 channels loaded")
 
     # get cloud mask channel
-    cm = get_cloud_mask(target_filepath, cloudmask_dir)
+    cm = modis_level2.get_cloud_mask(target_filepath, cloudmask_dir)
 
     if verbose:
         print("Cloud mask loaded")
@@ -71,14 +60,14 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     #  https://michelanders.blogspot.com/2010/12/calulating-sunrise-and-sunset-in-python.html
     t1 = time.time()
     try:
-        if all_invalid(np_swath[:2]):
+        if interpolation.all_invalid(np_swath[:2]):
             save_subdir = save_dir_night
             # all channels but visible ones
-            fill_all_channels(np_swath[2:13])
+            interpolation.fill_all_channels(np_swath[2:13])
 
         else:
             save_subdir = save_dir_daylight
-            fill_all_channels(np_swath[:13])
+            interpolation.fill_all_channels(np_swath[:13])
 
     except ValueError:
         save_subdir = save_dir_fucked
@@ -94,7 +83,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
 
     try:
 
-        lm = get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
+        lm = cloudsat.get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
         print(np_swath.shape, l2_channels.shape, cm.shape, lm.shape)
         np_swath = np.vstack([np_swath, l2_channels, cm[None, ], lm])
 
