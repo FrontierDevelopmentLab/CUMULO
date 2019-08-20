@@ -21,7 +21,13 @@ def contain_invalid(masked_array):
 # ------------------------------------------------------------------------------ INTERPOLATION
 
 def fill_channel(masked_array, xx, yy, method="nearest"):
-    
+    """ 
+        Inplace function: it fills all invalid valued by spatial interpolation
+        :param swath (numpy.array): array of size (nb_channels, height, width) 
+        :param method (string): method for the interpolation. Check scipy.interpolate.griddata for possible methods
+        :return: list of channels that have been filled
+    """
+
     x1 = xx[~masked_array.mask]
     y1 = yy[~masked_array.mask]
 
