@@ -5,7 +5,7 @@ import time
 import glob
 import pdb
 
-import create_modis
+import modis_level1
 import extract_payload
 import modis_l2
 from cloud_mask import get_cloud_mask
@@ -38,13 +38,13 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
             os.makedirs(dr)
 
     # find a corresponding geolocational (MOD03) file for the provided radiance (MOD02) file
-    geoloc_filepath = create_modis.find_matching_geoloc_file(target_filepath)
+    geoloc_filepath = modis_level1.find_matching_geoloc_file(target_filepath)
 
     if verbose:
         print("geoloc found: {}".format(geoloc_filepath))
 
     # pull a numpy array from the hdfs, now that we have both radiance and geolocational files
-    np_swath = create_modis.get_swath(target_filepath, geoloc_filepath)
+    np_swath = modis_level1.get_swath(target_filepath, geoloc_filepath)
 
     if verbose:
         print("swath {} loaded".format(tail))

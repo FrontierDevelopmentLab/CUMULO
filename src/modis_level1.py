@@ -1,7 +1,8 @@
-from satpy import Scene
 import glob
 import numpy as np
 import os
+
+from satpy import Scene
 
 def find_matching_geoloc_file(radiance_filename):
 	"""

@@ -7,7 +7,7 @@ from utils  import fill_all_channels, contain_invalid
 # from scipy.misc import toimage --depreciated, using PILlow
 
 from PIL import Image
-from create_modis import get_swath_rgb, find_matching_geoloc_file
+from modis_level1 import get_swath_rgb, find_matching_geoloc_file
 
 def save_swath_rbgs(radiance_filepath, save_dir, verbose=1):
     """
