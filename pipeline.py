@@ -129,8 +129,19 @@ def extract_tiles_from_swath(np_swath, swath_name, save_dir, tile_size=3, stride
     np.save(os.path.join(nonlabel_tiles_savepath_str, filename_npy), nonlabel_tiles, allow_pickle=False)
     np.save(os.path.join(nonlabel_metadata_savepath_str, filename_npy), nonlabel_metadata, allow_pickle=False)
 
+    save_tiles_separately(label_tiles, swath_name, os.path.join(save_dir, "label"))
+    save_tiles_separately(nonlabel_tiles, swath_name, os.path.join(save_dir, "nonlabel"))
+
     if verbose > 0:
         print("Extracted tiles from swath {}".format(swath_name))
+
+def save_tiles_separately(tiles, swath_name, save_dir, tile_size=3):
+
+    save_dir = os.path.join(save_dir, "all-tiles")
+
+    for i, tile in enumerate(swath):
+        
+        np.save(os.path.join(save_dir, "{}-{}.npy".format(swath_name.replace(".hdf", ""), i)), tile)
 
 def extract_swath_rbg(radiance_filepath, save_dir, verbose=1):
     """
