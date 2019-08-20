@@ -40,9 +40,6 @@ def get_lwp_cod_ctp(l1_filename, l2_dir):
     ctp = level_data.select('cloud_top_pressure_1km').get()[:2030,:1350].tolist()
     
     channels = np.stack([lwp, cod, ctp])
-    
-    # lwp should be positive
-    np.where(lwp < 0, np.NaN, channels)
 
     return channels.astype(np.float16)
 

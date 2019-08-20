@@ -4,11 +4,11 @@ import time
 
 from PIL import Image
 
-import cloudsat
-import interpolation
-import modis_level1
-import modis_level2
-import tile_extraction
+import src.cloudsat
+import src.interpolation
+import src.modis_level1
+import src.modis_level2
+import src.tile_extraction
 
 def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir, save_dir, verbose=1):
     """
@@ -34,7 +34,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
             os.makedirs(dr)
 
     # pull a numpy array from the hdfs
-    np_swath = modis_level1.get_swath(target_filepath)
+    np_swath = src.modis_level1.get_swath(target_filepath)
 
     if verbose:
         print("swath {} loaded".format(tail))
@@ -42,14 +42,14 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
     # as some bands have artefacts, we need to interpolate the missing data - time intensive
     t1 = time.time()
     try:
-        if interpolation.all_invalid(np_swath[:2]):
+        if src.interpolation.all_invalid(np_swath[:2]):
             save_subdir = save_dir_night
             # interpolate all channels but visible ones
-            interpolation.fill_all_channels(np_swath[2:13])
+            src.interpolation.fill_all_channels(np_swath[2:13])
 
         else:
             save_subdir = save_dir_daylight
-            interpolation.fill_all_channels(np_swath[:13])
+            src.interpolation.fill_all_channels(np_swath[:13])
 
     except ValueError:
         save_subdir = save_dir_fucked
@@ -61,13 +61,13 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
 
     # pull L2 channels here
     # this includes only LWP, cloud optical depth, cloud top pressure in this order
-    l2_channels = modis_level2.get_lwp_cod_ctp(target_filepath, level2_dir)
+    l2_channels = src.modis_level2.get_lwp_cod_ctp(target_filepath, level2_dir)
     
     if verbose:
         print("Level2 channels loaded")
 
     # pull cloud mask channel
-    cm = modis_level2.get_cloud_mask(target_filepath, cloudmask_dir)
+    cm = src.modis_level2.get_cloud_mask(target_filepath, cloudmask_dir)
 
     if verbose:
         print("Cloud mask loaded")
@@ -77,7 +77,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
 
     try:
 
-        lm = cloudsat.get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
+        lm = src.cloudsat.get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
         np_swath = np.vstack([np_swath, l2_channels, cm[None, ], lm])
 
     except:
@@ -99,10 +99,10 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
 
     return np_swath, save_subdir, tail
 
-def extract_tiles_from_swath(np_swath, swath_name, save_dir, tile_size=3, stride=3):
+def extract_tiles_from_swath(np_swath, swath_name, save_dir, tile_size=3, stride=3, verbose=1):
     # sample the swath for a selection of tiles and its associated metadata
     try: 
-        label_tiles, nonlabel_tiles, label_metadata, nonlabel_metadata = tile_extraction.extract_labels_and_cloud_tiles(np_swath, target_filepath, tile_size=tile_size, stride=stride)
+        label_tiles, nonlabel_tiles, label_metadata, nonlabel_metadata = src.tile_extraction.extract_labels_and_cloud_tiles(np_swath, target_filepath, tile_size=tile_size, stride=stride)
 
     except ValueError as e:
         print("Tiles failed to extract.", str(e))
@@ -122,7 +122,7 @@ def extract_tiles_from_swath(np_swath, swath_name, save_dir, tile_size=3, stride
         if not os.path.exists(dr):
             os.makedirs(dr)
 
-    filename_npy = swath_name.replace(".hdf", ".npy"))
+    filename_npy = swath_name.replace(".hdf", ".npy")
 
     np.save(os.path.join(label_tiles_savepath_str, filename_npy), label_tiles, allow_pickle=False)
     np.save(os.path.join(label_metadata_savepath_str, filename_npy), label_metadata, allow_pickle=False)
@@ -138,8 +138,11 @@ def extract_tiles_from_swath(np_swath, swath_name, save_dir, tile_size=3, stride
 def save_tiles_separately(tiles, swath_name, save_dir, tile_size=3):
 
     save_dir = os.path.join(save_dir, "all-tiles")
+    
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
 
-    for i, tile in enumerate(swath):
+    for i, tile in enumerate(tiles):
         
         np.save(os.path.join(save_dir, "{}-{}.npy".format(swath_name.replace(".hdf", ""), i)), tile)
 
@@ -160,11 +163,11 @@ def extract_swath_rbg(radiance_filepath, save_dir, verbose=1):
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    visual_swath = get_swath_rgb(radiance_filepath)
+    visual_swath = src.modis_level1.get_swath_rgb(radiance_filepath)
 
     try:
         #interpolate to remove NaN artefacts
-        interpolation.fill_all_channels(visual_swath)
+        src.interpolation.fill_all_channels(visual_swath)
     except ValueError:
         print("Failed to interpolate RGB channels of", basename)
         exit(0)
@@ -185,10 +188,10 @@ if __name__ == "__main__":
     target_filepath = sys.argv[1]
 
     np_swath, save_subdir, swath_name = extract_full_swath(target_filepath,
-                                level2_dir="../DATA/aqua-data/level_2",
-                                cloudmask_dir="../DATA/aqua-data/cloudmask",
-                                cloudsat_dir="../DATA/aqua-data/CC/cc_with_hours/",
-                                save_dir="/mnt/disks/disk11/2008/month2/",
+                                level2_dir="/mnt/disks/disk10/aqua-data/level_2",
+                                cloudmask_dir="/mnt/disks/disk10/aqua-data/cloud_mask",
+                                cloudsat_dir="/mnt/disks/disk10/aqua-data/collocated_classes/cc_with_hours",
+                                save_dir="/mnt/disks/disk10/2008/08/",
                                 verbose=1)
     
     extract_tiles_from_swath(np_swath, swath_name, save_subdir)

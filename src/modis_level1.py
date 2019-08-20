@@ -83,7 +83,7 @@ def get_swath_rgb(radiance_filename, composite='true_color_uncorrected'):
     """
 
     # find a corresponding geolocational (MOD03) file for the provided radiance (MOD02) file
-    geoloc_filename = find_matching_geoloc_file(radiance_filepath)
+    geoloc_filename = find_matching_geoloc_file(radiance_filename)
 
     global_scene = Scene(reader='modis_l1b', filenames=[radiance_filename, geoloc_filename])
 

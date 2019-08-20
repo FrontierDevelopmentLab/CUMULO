@@ -5,7 +5,7 @@ import os
 import pickle
 import random
 
-from track_alignment import scalable_align, align
+from src.track_alignment import scalable_align, align
 
 def get_month_day(day, year):
     """ Returns month and day given a day of a year"""
@@ -46,7 +46,7 @@ def get_cloudsat_filename(l1_filename, cloudsat_dir):
 
         pkl_time = os.path.basename(filename)[len(str_month_day):].replace(".pkl", "").split("_")
         pkl_hour, pkl_minutes = int(pkl_time[0]), int(pkl_time[1])
-
+        
         if (pkl_hour, pkl_minutes) <= (hour, minutes):
             candidates.append((pkl_hour, pkl_minutes))
 
