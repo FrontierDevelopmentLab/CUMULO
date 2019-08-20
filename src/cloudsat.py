@@ -5,7 +5,7 @@ import os
 import pickle
 import random
 
-from align_track import scalable_align, align
+from track_alignment import scalable_align, align
 
 def get_month_day(day, year):
     """ Returns month and day given a day of a year"""
