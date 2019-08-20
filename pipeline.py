@@ -132,7 +132,7 @@ def extract_tiles_from_swath(np_swath, swath_name, save_dir, tile_size=3, stride
     if verbose > 0:
         print("Extracted tiles from swath {}".format(swath_name))
 
-def save_swath_rbgs(radiance_filepath, save_dir, verbose=1):
+def extract_swath_rbg(radiance_filepath, save_dir, verbose=1):
     """
     :param radiance_filepath: the filepath of the radiance (MOD02) input file
     :param save_dir:
@@ -182,4 +182,4 @@ if __name__ == "__main__":
     
     extract_tiles_from_swath(np_swath, swath_name, save_subdir)
 
-    save_swath_rbgs(target_filepath, save_subdir, verbose=1)
+    extract_swath_rbg(target_filepath, save_subdir, verbose=1)
