@@ -59,7 +59,7 @@ def get_cloud_mask(l1_filename, cloud_mask_dir):
     cloud_mask = np.array(swath['cloud_mask'].load())[:2030, :1350]
 
     cloud_mask = (cloud_mask == 0)
-    cloud_mask = cloud_mask.astype(int)
+    cloud_mask = cloud_mask.astype(np.intp)
     
     return cloud_mask
 

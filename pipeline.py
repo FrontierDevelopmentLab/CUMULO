@@ -38,6 +38,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
 
     if verbose:
         print("swath {} loaded".format(tail))
+        print("type ", np_swath.dtype)
 
     # as some bands have artefacts, we need to interpolate the missing data - time intensive
     t1 = time.time()
@@ -58,6 +59,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
 
     if verbose:
         print("Interpolation took {} s".format(t2-t1))
+        print("type ", np_swath.dtype)
 
     # pull L2 channels here
     # this includes only LWP, cloud optical depth, cloud top pressure in this order
@@ -65,12 +67,14 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
     
     if verbose:
         print("Level2 channels loaded")
+        print("type ", l2_channels.dtype)
 
     # pull cloud mask channel
     cm = src.modis_level2.get_cloud_mask(target_filepath, cloudmask_dir)
 
     if verbose:
         print("Cloud mask loaded")
+        print("type ", cm.dtype)
 
     # get cloudsat labels channel - time intensive
     t1 = time.time()
@@ -89,6 +93,10 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
 
     if verbose:
         print("Cloudsat alignment took {} s".format(t2 - t1))
+        print("type ", np_swath.dtype)
+
+    # cast swath values to float
+    np_swath = np_swath.astype(np.float32)
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
     swath_savepath_str = os.path.join(save_subdir, tail.replace(".hdf", ".npy"))
