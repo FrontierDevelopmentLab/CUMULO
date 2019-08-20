@@ -1,7 +1,6 @@
 import numpy as np
-import random
 import os
-
+import random
 
 def random_tile_extract_from_file(swath_array, file_path, tile_size=3):
     """
@@ -307,6 +306,9 @@ def extract_labels_and_cloud_tiles(swath_array, file_path, tile_size=3, stride=3
     :return: nested list of [labelled payload, unlabelled payload, labelled meta, unlabelled meta]
     """
 
+    if swath_array.shape != (27, 2030, 1350):
+        raise ValueError("Tiles are extracted only from swaths with label mask")
+        
     labelled_payload, labelled_metadata = extract_label_tiles(swath_array=swath_array,
                                                               file_path=file_path,
                                                               tile_size=tile_size)

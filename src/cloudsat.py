@@ -13,6 +13,20 @@ def get_month_day(day, year):
     dt = datetime.datetime(year, 1, 1) + datetime.timedelta(days=day-1)
     return dt.month, dt.day
 
+def list_to_3d_array(list_labels):
+
+    p = len(list_labels)
+    array = np.zeros((8, p)) 
+
+    for i, labels in enumerate(list_labels):
+        for l in labels:
+
+            # keep only cloud types (0 is non-determined or error)
+            if l > 0:
+                array[l-1][i] += 1
+
+    return array
+
 def get_cloudsat_filename(l1_filename, cloudsat_dir):
     # MYD021KM.A2008003.1855.061.2018031033116.hdf l1
     # 1_3_18_15.pkl cloudsat
@@ -67,20 +81,6 @@ def get_track_oi(track_points, latitudes, longitudes):
     print(min_lat, max_lat, min_lon, max_lon)
     
     return track_points[:, np.logical_and.reduce([[track_points[0] >= min_lat], [track_points[0] <= max_lat], [track_points[1] >= min_lon], [track_points[1] <= max_lon]]).squeeze()]
-
-def list_to_3d_array(list_labels):
-
-    p = len(list_labels)
-    array = np.zeros((8, p)) 
-
-    for i, labels in enumerate(list_labels):
-        for l in labels:
-
-            # keep only cloud types (0 is non-determined or error)
-            if l > 0:
-                array[l-1][i] += 1
-
-    return array
 
 def find_range(track_points, latitudes, longitudes):
 
@@ -138,7 +138,7 @@ if __name__ == "__main__":
 
     import sys
     
-    import create_modis
+    import modis_level1
 
     target_filepath = sys.argv[1]
     head, tail = os.path.split(target_filepath)
@@ -150,13 +150,10 @@ if __name__ == "__main__":
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    # find a corresponding geolocational (MOD03) file for the provided radiance (MOD02) file
-    geoloc_filepath = create_modis.find_matching_geoloc_file(target_filepath)
-
     print("geoloc found: {}".format(geoloc_filepath))
 
-    # pull a numpy array from the hdfs, now that we have both radiance and geolocational files
-    np_swath = create_modis.get_swath(target_filepath, geoloc_filepath)
+    # pull a numpy array from the hdfs
+    np_swath = modis_level1.get_swath(target_filepath)
 
     lm = get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
 

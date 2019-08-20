@@ -1,11 +1,10 @@
 import numpy as np
-from PIL import Image
 import os
 import sys
-from interpolation import fill_all_channels, contain_invalid
-# from scipy.misc import toimage --depreciated, using PILlow
 
 from PIL import Image
+
+from interpolation import fill_all_channels, contain_invalid
 from modis_level1 import get_swath_rgb
 
 def save_swath_rbgs(radiance_filepath, save_dir, verbose=1):

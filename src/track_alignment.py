@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.metrics.pairwise import manhattan_distances
 
 def scalable_align(track, swath_lat, swath_lon):
-    
+    """  """
     (n, m) = swath_lat.shape
     labels = np.zeros((n, m, 8))
 
@@ -23,7 +23,7 @@ def scalable_align(track, swath_lat, swath_lon):
     return labels
 
 def align(track_points, swath_lat, swath_lon):
-    """ """
+    """ Euclidean distance """
     p = track_points.shape[1]
     n = swath_lat.shape[0]
     m = swath_lat.shape[1]

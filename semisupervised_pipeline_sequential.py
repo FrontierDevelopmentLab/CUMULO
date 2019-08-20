@@ -3,11 +3,11 @@ import os
 import sys
 import time
 
-import interpolation
 import cloudsat
-import extract_payload
+import interpolation
 import modis_level1
 import modis_level2
+import tile_extraction
 
 def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir, save_dir, verbose=1):
     """
@@ -24,10 +24,9 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     _, tail = os.path.split(target_filepath)
 
     # creating the save directories
-    save_dir_swath = os.path.join(save_dir, "swath")
-    save_dir_daylight = os.path.join(save_dir_swath, "daylight")
-    save_dir_night = os.path.join(save_dir_swath, "night")
-    save_dir_fucked = os.path.join(save_dir_swath, "fucked")
+    save_dir_daylight = os.path.join(save_dir, "daylight")
+    save_dir_night = os.path.join(save_dir, "night")
+    save_dir_fucked = os.path.join(save_dir, "fucked")
 
     for dr in [save_dir_daylight, save_dir_night, save_dir_fucked]:
         if not os.path.exists(dr):
@@ -38,31 +37,13 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
 
     if verbose:
         print("swath {} loaded".format(tail))
-        print("swath shape: {}".format(np_swath.shape))
-
-
-    # add in the L2 channels here
-    # this includes only LWP, cloud optical depth atm, cloud top pressure
-    l2_channels = modis_level2.get_lwp_cod_ctp(target_filepath, level2_dir)
-    
-    if verbose:
-        print("Level2 channels loaded")
-
-    # get cloud mask channel
-    cm = modis_level2.get_cloud_mask(target_filepath, cloudmask_dir)
-
-    if verbose:
-        print("Cloud mask loaded")
 
     # as some bands have artefacts, we need to interpolate the missing data - time intensive
-    # check if visible channels contain NaNs
-    # TODO: check also if daylight or not
-    #  https://michelanders.blogspot.com/2010/12/calulating-sunrise-and-sunset-in-python.html
     t1 = time.time()
     try:
         if interpolation.all_invalid(np_swath[:2]):
             save_subdir = save_dir_night
-            # all channels but visible ones
+            # interpolate all channels but visible ones
             interpolation.fill_all_channels(np_swath[2:13])
 
         else:
@@ -75,23 +56,32 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     t2 = time.time()
 
     if verbose:
-            print("Interpolation took {} s".format(t2-t1))
+        print("Interpolation took {} s".format(t2-t1))
 
-    # get cloudsat labels channel
-    # last two channels of np_swath correspond to Latitude and Longitude
+    # pull L2 channels here
+    # this includes only LWP, cloud optical depth, cloud top pressure in this order
+    l2_channels = modis_level2.get_lwp_cod_ctp(target_filepath, level2_dir)
+    
+    if verbose:
+        print("Level2 channels loaded")
+
+    # pull cloud mask channel
+    cm = modis_level2.get_cloud_mask(target_filepath, cloudmask_dir)
+
+    if verbose:
+        print("Cloud mask loaded")
+
+    # get cloudsat labels channel - time intensive
     t1 = time.time()
 
     try:
 
         lm = cloudsat.get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
-        print(np_swath.shape, l2_channels.shape, cm.shape, lm.shape)
         np_swath = np.vstack([np_swath, l2_channels, cm[None, ], lm])
 
     except:
 
-        save_subdir = save_dir_fucked
         np_swath = np.vstack([np_swath, l2_channels, cm[None, ]])
-
         print("file {} has no matching labelmask".format(tail))
 
     t2 = time.time()
@@ -106,16 +96,13 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     if verbose:
         print("swath {} saved".format(tail))
 
-    if save_subdir == save_dir_fucked:
-        exit(0)
-
     # sample the swath for a selection of tiles and its associated metadata
     try: 
         label_tiles, nonlabel_tiles, label_metadata, nonlabel_metadata = \
-        extract_payload.extract_labels_and_cloud_tiles(np_swath,
+        tile_extraction.extract_labels_and_cloud_tiles(np_swath,
                 target_filepath, tile_size=3, stride=3)
-    except ValueError:
-        print("Tiles failed to extract")
+    except ValueError as e:
+        print("Tiles failed to extract.", str(e))
         exit(0)
 
     if verbose:
