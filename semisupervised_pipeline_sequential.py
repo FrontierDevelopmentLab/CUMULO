@@ -7,7 +7,7 @@ import pdb
 
 import modis_level1
 import extract_payload
-import modis_l2
+import modis_level2
 from cloud_mask import get_cloud_mask
 from cloudsat import get_cloudsat_mask
 from utils import all_invalid, contain_invalid, fill_all_channels
@@ -54,7 +54,7 @@ def semisupervised_pipeline_run(target_filepath, level2_dir, cloudmask_dir, clou
     # add in the L2 channels here
     # this includes only LWP, cloud optical depth atm, cloud top pressure
     # these can be filled with NaN, however as they are not being passed to the IRESNET, that is OK
-    l2_channels = modis_l2.run(target_filepath, level2_dir)
+    l2_channels = modis_level2.run(target_filepath, level2_dir)
     
     if verbose:
         print("Level2 channels loaded")
