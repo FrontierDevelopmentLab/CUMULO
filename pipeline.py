@@ -102,7 +102,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
     np.save(swath_savepath_str, np_swath, allow_pickle=False)
 
     if verbose:
-        print("swath {} saved".format(tail))
+        print("swath saved as {}".format(swath_savepath_str))
 
     return np_swath, save_subdir, tail
 
@@ -115,8 +115,8 @@ def extract_tiles_from_swath(np_swath, swath_name, save_dir, tile_size=3, stride
         print("Tiles failed to extract.", str(e))
         exit(0)
 
-    if verbose:
-        print("tiles and metadata extracted from swath {}".format(swath_name))
+    if verbose > 0:
+        print("{} tiles extracted from swath {}".format(len(label_tiles) + len(nonlabel_tiles), swath_name))
 
     label_tiles_savepath_str = os.path.join(save_dir, "label", "tiles")
     label_metadata_savepath_str = os.path.join(save_dir, "label", "metadata")
@@ -138,9 +138,6 @@ def extract_tiles_from_swath(np_swath, swath_name, save_dir, tile_size=3, stride
 
     save_tiles_separately(label_tiles, swath_name, os.path.join(save_dir, "label"))
     save_tiles_separately(nonlabel_tiles, swath_name, os.path.join(save_dir, "nonlabel"))
-
-    if verbose > 0:
-        print("tiles extracted from swath {}".format(swath_name))
 
 def save_tiles_separately(tiles, swath_name, save_dir, tile_size=3):
 
@@ -175,17 +172,17 @@ def extract_swath_rbg(radiance_filepath, save_dir, verbose=1):
     try:
         #interpolate to remove NaN artefacts
         src.interpolation.fill_all_channels(visual_swath)
+
+        pil_loaded_visual_swath = Image.fromarray(visual_swath.transpose(1, 2, 0).astype(np.uint8), mode="RGB")
+
+        save_filename = os.path.join(save_dir, basename.replace(".hdf", ".png"))
+        pil_loaded_visual_swath.save(save_filename)
+
+        if verbose > 0:
+            print("RGB channels save as {}".format(save_filename))
+
     except ValueError:
         print("Failed to interpolate RGB channels of", basename)
-        exit(0)
-
-    pil_loaded_visual_swath = Image.fromarray(visual_swath.transpose(1, 2, 0).astype(np.uint8), mode="RGB")
-
-    save_filename = os.path.join(save_dir, basename.replace(".hdf", ".png"))
-    pil_loaded_visual_swath.save(save_filename)
-
-    if verbose > 0:
-        print("RGB channels extracted from swath {}".format(basename))
 
 # Hook for bash
 if __name__ == "__main__":
@@ -207,6 +204,7 @@ if __name__ == "__main__":
     # extract tiles for Machine Learning purposes
     if np_swath.shape != (27, 2030, 1350):
         raise ValueError("Tiles are extracted only from swaths with label mask")
+        exit(0)
 
     extract_tiles_from_swath(np_swath, swath_name, save_subdir)
 
