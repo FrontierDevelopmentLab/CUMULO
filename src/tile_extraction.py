@@ -37,6 +37,27 @@ def get_label_mask(class_channels):
 
     return labelmask.astype(np.bool) 
 
+def get_unlabel_mask(label_mask, tile_size=3):
+    """returns inverse of label mask, with all pixels around a labelled one eroded."""
+
+    offset, offset_2 = get_tile_offsets(tile_size)
+
+    unlabel_mask = (~label_mask).copy()
+
+    labelled_idx = np.where(label_mask)
+
+    for center_w, center_h in zip(*labelled_idx):
+
+        w1 = center_w - offset
+        w2 = center_w + offset_2 + 1
+        h1 = center_h - offset
+        h2 = center_h + offset_2 + 1
+
+        unlabel_mask[w1:w2, h1:h2] = False
+
+    return unlabel_mask
+
+
 # -------------------------------------------------------------------------------------------------- SAMPLERS
 
 def sample_cloudy_unlabelled_tiles(swath_array, cloud_mask, label_mask, number_of_tiles, tile_size=3):
@@ -50,11 +71,14 @@ def sample_cloudy_unlabelled_tiles(swath_array, cloud_mask, label_mask, number_o
     The script will use a cloud_mask channel to mask away all non-cloudy data and a label_mask channel to mask away all labelled data. The script will then randomly select a number of tiles (:param number of tiles) from the cloudy areas that are unlabelled.
     """
 
-    # mask not to sample outside the swath
+    # mask out borders not to sample outside the swath
     allowed_pixels = get_sampling_mask(swath_array.shape[1:], tile_size)
 
+    # mask out labelled pixels and pixels around them
+    unlabel_mask = get_unlabel_mask(label_mask)
+
     # combine the three masks, tile centers will be sampled from the cloudy and unlabelled pixels that are not in the borders of the swath
-    unlabelled_pixels = np.logical_and.reduce([allowed_pixels, cloud_mask, ~label_mask])
+    unlabelled_pixels = np.logical_and.reduce([allowed_pixels, cloud_mask, unlabel_mask])
     unlabelled_pixels_idx = np.where(unlabelled_pixels == 1)
     unlabelled_pixels_idx = list(zip(*unlabelled_pixels_idx))
 
@@ -183,7 +207,7 @@ if __name__ == "__main__":
 
     swath = np.ones((27, 5, 5))
     swath[18, :, 2] = 0
-    swath[19:, :, :2] = 0
+    swath[19:, :, :3] = 0
 
     labelled_tiles, unlabelled_tiles, labelled_positions, unlabelled_positions = sample_labelled_and_unlabelled_tiles(swath)
 
