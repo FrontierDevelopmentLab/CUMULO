@@ -109,7 +109,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
 def extract_tiles_from_swath(np_swath, swath_name, save_dir, tile_size=3, stride=3, verbose=1):
     # sample the swath for a selection of tiles and its associated metadata
     try: 
-        label_tiles, nonlabel_tiles, label_metadata, nonlabel_metadata = src.tile_extraction.extract_labels_and_cloud_tiles(np_swath, target_filepath, tile_size=tile_size, stride=stride)
+        label_tiles, nonlabel_tiles, label_metadata, nonlabel_metadata = src.tile_extraction.sample_labelled_and_unlabelled_tiles(np_swath, tile_size=tile_size)
 
     except ValueError as e:
         print("Tiles failed to extract.", str(e))
