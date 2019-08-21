@@ -191,9 +191,9 @@ def extract_swath_rbg(radiance_filepath, save_dir, verbose=1):
 if __name__ == "__main__":
 
     import sys
-    
     target_filepath = sys.argv[1]
 
+    # extract training channels, validation channels, cloud mask, class occurences if provided
     np_swath, save_subdir, swath_name = extract_full_swath(target_filepath,
                                 level2_dir="/mnt/disks/disk10/aqua-data/level_2",
                                 cloudmask_dir="/mnt/disks/disk10/aqua-data/cloud_mask",
@@ -201,6 +201,12 @@ if __name__ == "__main__":
                                 save_dir="/mnt/disks/disk10/2008/08/",
                                 verbose=1)
     
+    # extract visible channels for visualization purposes
+    extract_swath_rbg(target_filepath, save_subdir, verbose=1)
+
+    # extract tiles for Machine Learning purposes
+    if np_swath.shape != (27, 2030, 1350):
+        raise ValueError("Tiles are extracted only from swaths with label mask")
+
     extract_tiles_from_swath(np_swath, swath_name, save_subdir)
 
-    extract_swath_rbg(target_filepath, save_subdir, verbose=1)
