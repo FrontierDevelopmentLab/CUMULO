@@ -63,7 +63,7 @@ def get_cloudsat_filename(l1_filename, cloudsat_dir):
 
             pkl_time = os.path.basename(filename)[len(str_month_day):].replace(".pkl", "").split("_")
             pkl_hour, pkl_minutes = int(pkl_time[0]), int(pkl_time[1])
-
+            
             candidates.append((pkl_hour, pkl_minutes))
 
     pkl_hour, pkl_minutes = max(candidates)
@@ -107,7 +107,8 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
 
         # convert pickle to numpy array. The first two dims correspond to latitude and longitude coordinates, third dim corresponds to labels and may contain multiple values
         cloudsat = np.array([[c[0] for c in cloudsat_list[i]] for i in range(2)])
-        cloudsat = np.vstack((cloudsat, list_to_3d_array(cloudsat_list[2])))    
+        cloudsat = np.vstack((cloudsat, list_to_3d_array(cloudsat_list[2]))) 
+        
     # focus only on central part of the swath
     
     cs_range = find_range(cloudsat, latitudes, longitudes)
