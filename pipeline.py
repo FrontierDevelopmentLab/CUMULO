@@ -48,7 +48,8 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
 
     if verbose:
         print("Interpolation took {} s".format(t2-t1))
-
+    
+    print(filled_ch_idx)
     # if all channels were filled
     if len(filled_ch_idx) == 15:
         save_subdir = save_dir_daylight
@@ -178,7 +179,7 @@ def extract_swath_rbg(radiance_filepath, save_dir, verbose=1):
         pil_loaded_visual_swath.save(save_filename)
 
         if verbose > 0:
-            print("RGB channels save as {}".format(save_filename))
+            print("RGB channels saved as {}".format(save_filename))
 
     else:
         print("Failed to interpolate RGB channels of", basename)
