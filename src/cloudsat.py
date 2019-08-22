@@ -36,7 +36,7 @@ def get_cloudsat_filename(l1_filename, cloudsat_dir):
     month, day = get_month_day(day_s, year)
     hour, minutes = int(time_info[8:10]), int(time_info[10:12])
 
-    # get all cloudsat pickles of that day and of the day before
+    # get all cloudsat pickles of that day
     str_month_day = "{}_{}_".format(month, day)
     cloudsat_filenames = glob.glob(os.path.join(cloudsat_dir, "{}*.pkl".format(str_month_day)))
     

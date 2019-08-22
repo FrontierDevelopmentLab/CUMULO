@@ -41,27 +41,24 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
 
     # as some bands have artefacts, we need to interpolate the missing data - time intensive
     t1 = time.time()
-    try:
-        # interpolate visible channel
-        src.interpolation.fill_all_channels(np_swath[0][None, ])    
-        save_subdir = save_dir_daylight
-
-    except ValueError:
-        # if interpolation fails, data was collacted at night time
-        save_subdir = save_dir_night
     
-    try:
-        # interpolate all other channels
-        src.interpolation.fill_all_channels(np_swath[1:])
-
-    except ValueError:
-        # too many nans to interpolate values
-        save_subdir = save_dir_fucked
+    filled_ch_idx = src.interpolation.fill_all_channels(np_swath)  
     
     t2 = time.time()
 
     if verbose:
         print("Interpolation took {} s".format(t2-t1))
+
+    # if all channels were filled
+    if len(filled_ch_idx) == 15:
+        save_subdir = save_dir_daylight
+
+    # if all but visible channel were filled
+    elif filled_ch_idx == list(range(1, 15)):
+        save_subdir = save_dir_night
+
+    else:
+        save_subdir = save_dir_fucked
 
     # pull L2 channels here
     # this includes only LWP, cloud optical depth, cloud top pressure in this order
@@ -169,9 +166,11 @@ def extract_swath_rbg(radiance_filepath, save_dir, verbose=1):
 
     visual_swath = src.modis_level1.get_swath_rgb(radiance_filepath)
 
-    try:
-        #interpolate to remove NaN artefacts
-        src.interpolation.fill_all_channels(visual_swath)
+    
+    #interpolate to remove NaN artefacts
+    filled_ch_idx = src.interpolation.fill_all_channels(visual_swath)
+
+    if len(filled_ch_idx) == 3:
 
         pil_loaded_visual_swath = Image.fromarray(visual_swath.transpose(1, 2, 0).astype(np.uint8), mode="RGB")
 
@@ -181,7 +180,7 @@ def extract_swath_rbg(radiance_filepath, save_dir, verbose=1):
         if verbose > 0:
             print("RGB channels save as {}".format(save_filename))
 
-    except ValueError:
+    else:
         print("Failed to interpolate RGB channels of", basename)
 
 # Hook for bash

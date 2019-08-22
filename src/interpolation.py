@@ -58,10 +58,14 @@ def fill_all_channels(swath, method="nearest"):
 
         if contain_invalid(masked_array):
             
-            inter = fill_channel(masked_array, xx, yy, method)
-            swath[i] = inter
+            try:
+                inter = fill_channel(masked_array, xx, yy, method)
+                swath[i] = inter
 
-            filled_channels.append(i)
+                filled_channels.append(i)
+            
+            except:
+                print("Couldn't interpolate channel", i)
 
     return filled_channels
 
