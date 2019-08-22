@@ -48,8 +48,8 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
 
     if verbose:
         print("Interpolation took {} s".format(t2-t1))
-    
-    print(filled_ch_idx)
+        print("Channels", filled_ch_idx, "are now full")
+
     # if all channels were filled
     if len(filled_ch_idx) == 15:
         save_subdir = save_dir_daylight

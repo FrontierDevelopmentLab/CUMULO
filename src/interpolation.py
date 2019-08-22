@@ -42,7 +42,7 @@ def fill_all_channels(swath, method="nearest"):
         Inplace function: it fills all invalid valued by spatial interpolation a channel at a time
         :param swath (numpy.array): array of size (nb_channels, height, width) 
         :param method (string): method for the interpolation. Check scipy.interpolate.griddata for possible methods
-        :return: list of channels that have been filled
+        :return: list of channels that have been filled or were already full
     """
 
     swath_shape = swath.shape
@@ -50,7 +50,7 @@ def fill_all_channels(swath, method="nearest"):
     x, y = np.arange(0, swath_shape[2]), np.arange(0, swath_shape[1])
     xx, yy = np.meshgrid(x, y)
 
-    filled_channels = []
+    full_channels = []
 
     for i, ch_array in enumerate(swath):
 
@@ -62,12 +62,16 @@ def fill_all_channels(swath, method="nearest"):
                 inter = fill_channel(masked_array, xx, yy, method)
                 swath[i] = inter
 
-                filled_channels.append(i)
+                full_channels.append(i)
             
             except:
                 print("Couldn't interpolate channel", i)
 
-    return filled_channels
+        else:
+
+            full_channels.append(i)
+
+    return full_channels
 
 if __name__ == "__main__":
 
