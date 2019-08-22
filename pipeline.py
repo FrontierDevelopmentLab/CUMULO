@@ -54,8 +54,8 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
     if len(filled_ch_idx) == 15:
         save_subdir = save_dir_daylight
 
-    # if all but visible channel were filled
-    elif filled_ch_idx == list(range(1, 15)):
+    # if all but visible channels were filled
+    elif filled_ch_idx == list(range(2, 7)) + list(range(8, 15)):
         save_subdir = save_dir_night
 
     else:
@@ -188,14 +188,15 @@ def extract_swath_rbg(radiance_filepath, save_dir, verbose=1):
 if __name__ == "__main__":
 
     import sys
-    target_filepath = sys.argv[1]
+    target_filepath = sys.argv[2]
+    save_dir = sys.argv[1]
 
     # extract training channels, validation channels, cloud mask, class occurences if provided
     np_swath, save_subdir, swath_name = extract_full_swath(target_filepath,
                                 level2_dir="/mnt/disks/disk10/aqua-data/level_2",
                                 cloudmask_dir="/mnt/disks/disk10/aqua-data/cloud_mask",
                                 cloudsat_dir="/mnt/disks/disk10/aqua-data/collocated_classes/cc_with_hours",
-                                save_dir="/mnt/disks/disk10/2008/08/",
+                                save_dir=save_dir,
                                 verbose=1)
     
     # extract visible channels for visualization purposes
