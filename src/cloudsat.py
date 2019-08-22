@@ -13,6 +13,29 @@ def get_month_day(day, year):
     dt = datetime.datetime(year, 1, 1) + datetime.timedelta(days=day-1)
     return dt.month, dt.day
 
+def get_pickle_datetime(filename, year):
+    
+    pkl_time = os.path.basename(filename).replace(".pkl", "").split("_")
+    pkl_month, pkl_day = int(pkl_time[0]), int(pkl_time[1])
+    pkl_hour, pkl_minutes = int(pkl_time[2]), int(pkl_time[3])
+
+    return datetime.datetime(year, pkl_month, pkl_day, pkl_hour, pkl_minutes)
+
+def find_pickles_by_day(abs_day, year):
+    """ returns list of pickle filenames of specified day, and of previous and following day """
+
+    cloudsat_filenames = []
+
+    for i in range(-1, 2):
+
+        month, day = get_month_day(abs_day + i, year)
+
+        # get all cloudsat pickles of that day
+        str_month_day = "{}_{}_".format(month, day)
+        cloudsat_filenames += glob.glob(os.path.join(cloudsat_dir, "{}*.pkl".format(str_month_day)))
+
+    return cloudsat_filenames
+
 def list_to_3d_array(list_labels):
 
     p = len(list_labels)
@@ -27,48 +50,54 @@ def list_to_3d_array(list_labels):
 
     return array
 
-def get_cloudsat_filename(l1_filename, cloudsat_dir):
+def get_cloudsat_info(l1_filename, cloudsat_dir):
     # MYD021KM.A2008003.1855.061.2018031033116.hdf l1
     # 1_3_18_15.pkl cloudsat
 
     time_info = l1_filename.split('MYD021KM.A')[1]
-    year, day_s = int(time_info[:4]), int(time_info[4:7])
-    month, day = get_month_day(day_s, year)
+    year, abs_day = int(time_info[:4]), int(time_info[4:7])
+    month, day = get_month_day(abs_day, year)
     hour, minutes = int(time_info[8:10]), int(time_info[10:12])
 
-    # get all cloudsat pickles of that day
-    str_month_day = "{}_{}_".format(month, day)
-    cloudsat_filenames = glob.glob(os.path.join(cloudsat_dir, "{}*.pkl".format(str_month_day)))
+    swath_dt = datetime.datetime(year, month, day, hour, minutes)
+
+    # get all candidate pickles
+    cloudsat_filenames = find_pickles_by_day(abs_day, year)
     
-    # keep only the pkl with the corresponding time
-    candidates = []
+    # collect all pickles before and after swath's time
+    prev_candidates, foll_candidates = [], []
+
     for filename in cloudsat_filenames:
 
-        pkl_time = os.path.basename(filename)[len(str_month_day):].replace(".pkl", "").split("_")
-        pkl_hour, pkl_minutes = int(pkl_time[0]), int(pkl_time[1])
+        dt = get_pickle_time(filename, year)
         
-        if (pkl_hour, pkl_minutes) <= (hour, minutes):
-            candidates.append((pkl_hour, pkl_minutes))
+        if dt <= swath_dt:
+            prev_candidates.append(dt)
 
-    if len(candidates) == 0:
+        else:
+            foll_candidates.append(dt)
 
-        #look for the pickle of previous day, with latest time
+    prev_dt = max(prev_candidates)
+    foll_dt = min(foll_candidates)
 
-        month, day = get_month_day(day_s-1, year)
-        # get all cloudsat pickles of that day and of the day before
-        str_month_day = "{}_{}_".format(month, day)
-        cloudsat_filenames = glob.glob(os.path.join(cloudsat_dir, "{}*.pkl".format(str_month_day)))
+    # load cloudsat pickle
+    prev_filename = os.path.join(cloudsat_dir, "{}_{}_{}_{}.pkl".format(prev_dt.month, prev_dt.day, prev_dt.hour, prev_dt.minute))
+    with open(prev_filename, "rb") as f:
         
-        for filename in cloudsat_filenames:
+        # pickle containing three lists, corresponding to latitude, longitude and label
+        cloudsat_list = pickle.load(f)
 
-            pkl_time = os.path.basename(filename)[len(str_month_day):].replace(".pkl", "").split("_")
-            pkl_hour, pkl_minutes = int(pkl_time[0]), int(pkl_time[1])
+    # if swath crosses over two cloudsat pickles, merge them
+    if (foll_dt - swath_dt).seconds < 300:
 
-            candidates.append((pkl_hour, pkl_minutes))
+        # load cloudsat pickle
+        foll_filename = os.path.join(cloudsat_dir, "{}_{}_{}_{}.pkl".format(foll_dt.month, foll_dt.day, foll_dt.hour, foll_dt.minute))
+        with open(foll_filename, "rb") as f:
+            
+            # concatenate the two pickles information
+            cloudsat_list = [cloudsat_list[i] + values for i, values in pickle.load(f)]
 
-    pkl_hour, pkl_minutes = max(candidates)
-
-    return os.path.join(cloudsat_dir, "{}{}_{}.pkl".format(str_month_day, pkl_hour, pkl_minutes))
+    return cloudsat_list
 
 def get_track_oi(track_points, latitudes, longitudes):
 
@@ -80,7 +109,7 @@ def get_track_oi(track_points, latitudes, longitudes):
     
     return track_points[:, np.logical_and.reduce([[track_points[0] >= min_lat], [track_points[0] <= max_lat], [track_points[1] >= min_lon], [track_points[1] <= max_lon]]).squeeze()]
 
-def find_range(track_points, latitudes, longitudes):
+def find_track_range(track_points, latitudes, longitudes):
 
     i = random.randint(1, 2028)
 
@@ -98,19 +127,13 @@ def find_range(track_points, latitudes, longitudes):
 
 def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
 
-    cloudsat_filename = get_cloudsat_filename(l1_filename, cloudsat_dir)
+    cloudsat_list = get_cloudsat_info(l1_filename, cloudsat_dir)
     
-    with open(cloudsat_filename, "rb") as f:
-        
-        # pickle containing three lists, corresponding to latitude, longitude and label
-        cloudsat_list = pickle.load(f)
+    cloudsat = np.array([[c[0] for c in cloudsat_list[i]] for i in range(2)])
+    cloudsat = np.vstack((cloudsat, list_to_3d_array(cloudsat_list[2])))   
 
-        # convert pickle to numpy array. The first two dims correspond to latitude and longitude coordinates, third dim corresponds to labels and may contain multiple values
-        cloudsat = np.array([[c[0] for c in cloudsat_list[i]] for i in range(2)])
-        cloudsat = np.vstack((cloudsat, list_to_3d_array(cloudsat_list[2])))    
-    # focus only on central part of the swath
-    
-    cs_range = find_range(cloudsat, latitudes, longitudes)
+    # focus around cloudsat track
+    cs_range = find_track_range(cloudsat, latitudes, longitudes)
     lat, lon = latitudes[:, cs_range[0]:cs_range[1]], longitudes[:, cs_range[0]:cs_range[1]]
 
     track_points = get_track_oi(cloudsat, lat, lon)
