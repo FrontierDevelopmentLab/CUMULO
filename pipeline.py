@@ -84,10 +84,10 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
         lm = src.cloudsat.get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
         np_swath = np.vstack([np_swath, l2_channels, cm[None, ], lm])
 
-    except:
+    except Exception as e:
 
         np_swath = np.vstack([np_swath, l2_channels, cm[None, ]])
-        print("file {} has no matching labelmask".format(tail))
+        print("file {} has no matching labelmask: {}".format(tail, e))
 
     t2 = time.time()
 
@@ -182,7 +182,7 @@ def extract_swath_rbg(radiance_filepath, save_dir, verbose=1):
             print("RGB channels save as {}".format(save_filename))
 
     except ValueError:
-        print("Failed to interpolate RGB channels of", basename)
+        print("Failed to extract RGB channels of", basename)
 
 # Hook for bash
 if __name__ == "__main__":
@@ -203,7 +203,11 @@ if __name__ == "__main__":
 
     # extract tiles for Machine Learning purposes
     if np_swath.shape != (27, 2030, 1350):
-        raise ValueError("Tiles are extracted only from swaths with label mask")
+        print("Failed to extract tiles: tiles are extracted only from swaths with label mask")
+        exit(0)
+
+    if "fucked" in save_subdir:
+        print("Failed to extract tiles: tiles are extracted only from swaths with fully interpolated non-visible channels")
         exit(0)
 
     extract_tiles_from_swath(np_swath, swath_name, save_subdir)
