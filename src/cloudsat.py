@@ -21,7 +21,7 @@ def get_pickle_datetime(filename, year):
 
     return datetime.datetime(year, pkl_month, pkl_day, pkl_hour, pkl_minutes)
 
-def find_pickles_by_day(abs_day, year):
+def find_pickles_by_day(abs_day, year, cloudsat_dir):
     """ returns list of pickle filenames of specified day, and of previous and following day """
 
     cloudsat_filenames = []
@@ -62,7 +62,7 @@ def get_cloudsat_info(l1_filename, cloudsat_dir):
     swath_dt = datetime.datetime(year, month, day, hour, minutes)
 
     # get all candidate pickles
-    cloudsat_filenames = find_pickles_by_day(abs_day, year)
+    cloudsat_filenames = find_pickles_by_day(abs_day, year, cloudsat_dir)
     
     # collect all pickles before and after swath's time
     prev_candidates, foll_candidates = [], []
