@@ -83,7 +83,7 @@ def get_cloudsat_info(l1_filename, cloudsat_dir):
     # load cloudsat pickle
     prev_filename = os.path.join(cloudsat_dir, "{}_{}_{}_{}.pkl".format(prev_dt.month, prev_dt.day, prev_dt.hour, prev_dt.minute))
     with open(prev_filename, "rb") as f:
-        
+
         # pickle containing three lists, corresponding to latitude, longitude and label
         cloudsat_list = pickle.load(f)
 
