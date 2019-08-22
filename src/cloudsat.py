@@ -69,7 +69,7 @@ def get_cloudsat_info(l1_filename, cloudsat_dir):
 
     for filename in cloudsat_filenames:
 
-        dt = get_pickle_time(filename, year)
+        dt = get_pickle_datetime(filename, year)
         
         if dt <= swath_dt:
             prev_candidates.append(dt)
@@ -82,6 +82,8 @@ def get_cloudsat_info(l1_filename, cloudsat_dir):
 
     # load cloudsat pickle
     prev_filename = os.path.join(cloudsat_dir, "{}_{}_{}_{}.pkl".format(prev_dt.month, prev_dt.day, prev_dt.hour, prev_dt.minute))
+    print("retrieved cloudsat file", prev_filename)
+
     with open(prev_filename, "rb") as f:
 
         # pickle containing three lists, corresponding to latitude, longitude and label
@@ -92,11 +94,12 @@ def get_cloudsat_info(l1_filename, cloudsat_dir):
 
         # load cloudsat pickle
         foll_filename = os.path.join(cloudsat_dir, "{}_{}_{}_{}.pkl".format(foll_dt.month, foll_dt.day, foll_dt.hour, foll_dt.minute))
+        print("merging labels with cloudsat file", foll_filename)
         with open(foll_filename, "rb") as f:
             
             # concatenate the two pickles information
-            cloudsat_list = [cloudsat_list[i] + values for i, values in pickle.load(f)]
-
+            cloudsat_list = [cloudsat_list[i] + values for i, values in enumerate(pickle.load(f))]
+            
     return cloudsat_list
 
 def get_track_oi(track_points, latitudes, longitudes):
@@ -161,14 +164,12 @@ if __name__ == "__main__":
     target_filepath = sys.argv[1]
     head, tail = os.path.split(target_filepath)
 
-    cloudsat_dir="../DATA/aqua-data/collocated_classes/cc_with_hours/"
+    cloudsat_dir="/mnt/disks/disk10/aqua-data/collocated_classes/cc_with_hours/"
 
     save_dir = "../DATA/aqua-data-processed/labelmask/"
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-
-    print("geoloc found: {}".format(geoloc_filepath))
 
     # pull a numpy array from the hdfs
     np_swath = modis_level1.get_swath(target_filepath)
