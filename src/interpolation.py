@@ -65,7 +65,7 @@ def fill_all_channels(swath, method="nearest"):
                 full_channels.append(i)
             
             except:
-                print("Couldn't interpolate channel", i)
+                pass
 
         else:
 
