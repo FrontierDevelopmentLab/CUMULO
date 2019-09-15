@@ -24,7 +24,7 @@ def find_track_range(cs_latitudes, cs_longitudes, latitudes, longitudes):
 
     min_j, max_j = min(i_mapping[1]), max(i_mapping[1])
 
-    return max(0, min_j - 100), min(max_j + 100, 1349)
+    return max(0, min_j - 100), min(max_j + 100, MAX_WIDTH - 1)
 
 def scalable_align(cs_lat, cs_lon, swath_lat, swath_lon):
     """  """
