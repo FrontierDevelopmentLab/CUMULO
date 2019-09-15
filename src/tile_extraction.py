@@ -2,6 +2,8 @@ import numpy as np
 import os
 import random
 
+MAX_WIDTH, MAX_HEIGHT = 1354, 2030
+
 # -------------------------------------------------------------------------------------------------- UTILS
 
 def get_tile_offsets(tile_size):
@@ -14,7 +16,7 @@ def get_tile_offsets(tile_size):
 
     return offset, offset_2
 
-def get_sampling_mask(mask_shape=(2030, 1350), tile_size=3):
+def get_sampling_mask(mask_shape=(MAX_HEIGHT, MAX_WIDTH), tile_size=3):
     """ returns a mask of allowed centers for the tiles to be sampled. The center of an even size tile is considered to be the point at the position (size // 2 + 1, size // 2 + 1) within the tile.
     """
     mask = np.ones(mask_shape, dtype=np.uint8)

@@ -3,6 +3,8 @@ import random
 
 from sklearn.metrics.pairwise import manhattan_distances
 
+MAX_WIDTH, MAX_HEIGHT = 1354, 2030
+
 def get_track_oi(cs_latitudes, cs_longitudes, swath_latitudes, swath_longitudes):
 
     max_lon, min_lon = np.max(swath_longitudes), np.min(swath_longitudes)
@@ -12,7 +14,7 @@ def get_track_oi(cs_latitudes, cs_longitudes, swath_latitudes, swath_longitudes)
 
 def find_track_range(cs_latitudes, cs_longitudes, latitudes, longitudes):
 
-    i = random.randint(1, 2028)
+    i = random.randint(1, MAX_HEIGHT - 2)
 
     i_lat, i_lon = latitudes[i-1:i+1, :], longitudes[i-1:i+1, :]
     

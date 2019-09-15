@@ -4,6 +4,8 @@ import os
 
 from satpy import Scene
 
+MAX_WIDTH, MAX_HEIGHT = 1354, 2030
+
 def find_matching_geoloc_file(radiance_filename):
     """
     :param radiance_filename: the filename for the radiance .hdf, demarcated with "MOD02".
@@ -63,20 +65,20 @@ def get_swath(radiance_filename):
     longitude = np.array(global_scene['longitude'].load())
 
     swath = []
-    # note that we only take til 2030 and til 1350 to avoid any bowtie effects
+
     for comp in composite:
         temp = np.array(global_scene[comp].load())
-        swath.append(temp[:2030, :1350])
+        swath.append(temp[:MAX_HEIGHT, :MAX_WIDTH])
 
-    swath.append(latitude[:2030, :1350])
-    swath.append(longitude[:2030, :1350])
+    swath.append(latitude[:MAX_HEIGHT, :MAX_WIDTH])
+    swath.append(longitude[:MAX_HEIGHT, :MAX_WIDTH])
 
     return np.array(swath, dtype=np.float16)
 
 def get_swath_rgb(radiance_filename, composite='true_color_uncorrected'):
     """
     :param radiance_filename: MOD02 filename
-    :return visible RGB channels: numpy.ndarray of size (3, 2030, 1350) 
+    :return visible RGB channels: numpy.ndarray of size (3, 2030, 1354) 
     Uses the satpy Scene reader with the modis-l1b files. Issues reading files might be due to pyhdf not being
     installed - otherwise try pip install satpy[modis_0l1b]
     Creates a scene with the MOD02 and MOD03 files, and extracts the RGB channels from the two visible MODIS bands.
@@ -90,6 +92,6 @@ def get_swath_rgb(radiance_filename, composite='true_color_uncorrected'):
     # load it in, make sure resolution is 1000 to match our other datasets
     global_scene.load([composite], resolution=1000)
 
-    rgb = np.array(global_scene[composite])[:,:2030,:1350]
+    rgb = np.array(global_scene[composite])[:,:MAX_HEIGHT,:MAX_WIDTH]
 
     return rgb

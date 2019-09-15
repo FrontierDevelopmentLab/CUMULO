@@ -9,6 +9,8 @@ from satpy import Scene
 This info includes the YYYY and day in year (ex: AYYYYDIY) and then the time of the pass (ex1855)
 It returns the full level 2 filename path'''
 
+MAX_WIDTH, MAX_HEIGHT = 1354, 2030
+
 def get_matching_l2_filename(radiance_filename, l2_dir):
     """
     :param radiance_filename: the filename for the radiance .hdf, demarcated with "MOD021KM".
@@ -35,11 +37,20 @@ def get_lwp_cod_ctp(l1_filename, l2_dir):
 
     level_data = SD(filename, SDC.READ)
 
-    lwp = level_data.select('Cloud_Water_Path').get()[:2030,:1350].tolist()
-    cod = level_data.select('Cloud_Optical_Thickness').get()[:2030,:1350].tolist()
-    ctp = level_data.select('cloud_top_pressure_1km').get()[:2030,:1350].tolist()
+    lwp = level_data.select('Cloud_Water_Path').get()[:MAX_HEIGHT,:MAX_WIDTH]
+    cod = level_data.select('Cloud_Optical_Thickness').get()[:MAX_HEIGHT,:MAX_WIDTH]
+    cer = level_data.select('Cloud_Effective_Radius').get()[:MAX_HEIGHT,:MAX_WIDTH]
+
+    ctp = level_data.select('cloud_top_pressure_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
+    cth = level_data.select('cloud_top_height_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
+    cpi = level_data.select('Cloud_Phase_Infrared_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
+    ctt = level_data.select('cloud_top_temperature_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
+    cer = level_data.select('cloud_effective_radius_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
+    cee = level_data.select('cloud_effective_emissivity_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
+
+    st = level_data.select('surface_temperature_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
     
-    channels = np.stack([lwp, cod, ctp])
+    channels = np.stack([lwp, cod, cer, ctp, cth, cpi, ctt, cer, cee, st])
 
     return channels.astype(np.float16)
 
@@ -56,7 +67,7 @@ def get_cloud_mask(l1_filename, cloud_mask_dir):
     swath = Scene(reader = 'modis_l2', filenames = [cloud_mask_filename])
     swath.load(['cloud_mask'], resolution = 1000)
     
-    cloud_mask = np.array(swath['cloud_mask'].load())[:2030, :1350]
+    cloud_mask = np.array(swath['cloud_mask'].load())[:MAX_HEIGHT, :MAX_WIDTH]
 
     cloud_mask = (cloud_mask == 0)
     cloud_mask = cloud_mask.astype(np.intp)
