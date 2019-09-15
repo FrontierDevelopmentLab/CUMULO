@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 from sklearn.metrics.pairwise import manhattan_distances
 
@@ -17,13 +18,11 @@ def find_track_range(cs_latitudes, cs_longitudes, latitudes, longitudes):
     
     i_indices = get_track_oi(cs_latitudes, cs_longitudes, i_lat, i_lon)
     
-    i_mask = scalable_align(i_indices, i_lat, i_lon)
+    i_mapping = scalable_align(cs_latitudes[i_indices], cs_longitudes[i_indices], i_lat, i_lon)
 
-    idx_nonzeros = np.where(np.sum(i_mask, 2) != 0)
+    min_j, max_j = min(i_mapping[1]), max(i_mapping[1])
 
-    min_j, max_j = min(idx_nonzeros[1]), max(idx_nonzeros[1])
-
-    return min_j - 100, max_j + 100
+    return max(0, min_j - 100), min(max_j + 100, 1349)
 
 def scalable_align(cs_lat, cs_lon, swath_lat, swath_lon):
     """  """
