@@ -134,8 +134,8 @@ def extract_tiles_from_swath(np_swath, swath_name, save_dir, tile_size=3, stride
     np.save(os.path.join(nonlabel_tiles_savepath_str, filename_npy), nonlabel_tiles, allow_pickle=False)
     np.save(os.path.join(nonlabel_metadata_savepath_str, filename_npy), nonlabel_metadata, allow_pickle=False)
 
-    save_tiles_separately(label_tiles, swath_name, os.path.join(save_dir, "label"))
-    save_tiles_separately(nonlabel_tiles, swath_name, os.path.join(save_dir, "nonlabel"))
+    # save_tiles_separately(label_tiles, swath_name, os.path.join(save_dir, "label"))
+    # save_tiles_separately(nonlabel_tiles, swath_name, os.path.join(save_dir, "nonlabel"))
 
 def save_tiles_separately(tiles, swath_name, save_dir, tile_size=3):
 
@@ -166,7 +166,6 @@ def extract_swath_rbg(radiance_filepath, save_dir, verbose=1):
         os.makedirs(save_dir)
 
     visual_swath = src.modis_level1.get_swath_rgb(radiance_filepath)
-
     
     #interpolate to remove NaN artefacts
     filled_ch_idx = src.interpolation.fill_all_channels(visual_swath)
