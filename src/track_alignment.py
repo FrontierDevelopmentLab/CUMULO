@@ -2,49 +2,49 @@ import numpy as np
 
 from sklearn.metrics.pairwise import manhattan_distances
 
-def scalable_align(track, swath_lat, swath_lon):
+def get_track_oi(cs_latitudes, cs_longitudes, swath_latitudes, swath_longitudes):
+
+    max_lon, min_lon = np.max(swath_longitudes), np.min(swath_longitudes)
+    max_lat, min_lat = np.max(swath_latitudes), np.min(swath_latitudes)
+    
+    return np.logical_and.reduce([[cs_latitudes >= min_lat], [cs_latitudes <= max_lat], [cs_longitudes >= min_lon], [cs_longitudes <= max_lon]]).squeeze()
+
+def find_track_range(cs_latitudes, cs_longitudes, latitudes, longitudes):
+
+    i = random.randint(1, 2028)
+
+    i_lat, i_lon = latitudes[i-1:i+1, :], longitudes[i-1:i+1, :]
+    
+    i_indices = get_track_oi(cs_latitudes, cs_longitudes, i_lat, i_lon)
+    
+    i_mask = scalable_align(i_indices, i_lat, i_lon)
+
+    idx_nonzeros = np.where(np.sum(i_mask, 2) != 0)
+
+    min_j, max_j = min(idx_nonzeros[1]), max(idx_nonzeros[1])
+
+    return min_j - 100, max_j + 100
+
+def scalable_align(cs_lat, cs_lon, swath_lat, swath_lon):
     """  """
     (n, m) = swath_lat.shape
-    labels = np.zeros((n, m, 8))
 
     swath_points = np.stack((swath_lat.flatten(), swath_lon.flatten())).T
-    track_points = track[:2].T
-
-    L = track[2:]
-
-    p = L.shape[1]
+    track_points = np.stack((cs_lat, cs_lon), axis=1)
   
     dist = manhattan_distances(swath_points, track_points)
-    indices = np.unravel_index(np.argmin(dist, axis=0), (n, m))
-    
-    for i in range(p):
-        labels[indices[0][i], indices[1][i]] += L[:, i]
+    mapping = np.unravel_index(np.argmin(dist, axis=0), (n, m))
 
-    return labels
+    return mapping
 
-def align(track_points, swath_lat, swath_lon):
-    """ Euclidean distance """
-    p = track_points.shape[1]
-    n = swath_lat.shape[0]
-    m = swath_lat.shape[1]
-    swath_lat = swath_lat.reshape((n,m,1))
-    swath_lon = swath_lon.reshape((n,m,1))
-    labels = np.zeros((n,m))
-    # change track points to numpys
-    L  = track_points[2].reshape((1,p))
-    LA = track_points[0].reshape((1,1,p))
-    LO = track_points[1].reshape((1,1,p))
-    LA_dists = (LA - swath_lat)**2
-    LO_dists = (LO - swath_lon)**2
-    both = np.sqrt(LA_dists + LO_dists)
+def map_labels(mapping, labels, shape, nb_classes=8):
 
-    both_indsR, both_indsC = np.unravel_index(np.argmin(both.reshape(n*m,p),axis=0), (n,m))
+    labelmask = np.zeros((*shape, labels.shape[1]))
 
-    locs = np.concatenate((both_indsR[np.newaxis,:],both_indsC[np.newaxis,:]),0)
-    inds = np.ravel_multi_index(locs, (n,m))
-    labels[locs[0,:],locs[1,:]] = L
+    for i, l in enumerate(labels):
+        labelmask[mapping[0][i], mapping[1][i]] += l
 
-    return labels.astype(int)
+    return labelmask
 
 if __name__ == "__main__":
 
@@ -63,10 +63,7 @@ if __name__ == "__main__":
 
     test_track = np.array([[8.7, 9.1, 10.1, 13.7], [11.1, 18.4, 39.1, 45.9], [1, 3, 7, 6]])
 
-    labels = align(test_track, test_lat, test_lon)
-
-    print(labels)
-
-    labels = scalable_align(test_track, test_lat, test_lon)
+    mapping = scalable_align(test_track[0], test_track[1], test_lat, test_lon)
+    labels = map_labels(mapping, np.array(test_track[2])[:, None], (5, 3))
 
     print(labels)

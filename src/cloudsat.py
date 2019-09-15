@@ -5,142 +5,168 @@ import os
 import pickle
 import random
 
-from src.track_alignment import scalable_align, align
+from src.track_alignment import get_track_oi, find_track_range, scalable_align
 
-def get_month_day(day, year):
+def get_datetime(year, day, hour=0, minutes=0):
     """ Returns month and day given a day of a year"""
 
-    dt = datetime.datetime(year, 1, 1) + datetime.timedelta(days=day-1)
-    return dt.month, dt.day
+    dt = datetime.datetime(year, 1, 1, hour, minutes) + datetime.timedelta(days=day-1)
+    return dt
 
-def get_pickle_datetime(filename, year):
-    
-    pkl_time = os.path.basename(filename).replace(".pkl", "").split("_")
-    pkl_month, pkl_day = int(pkl_time[0]), int(pkl_time[1])
-    pkl_hour, pkl_minutes = int(pkl_time[2]), int(pkl_time[3])
-
-    return datetime.datetime(year, pkl_month, pkl_day, pkl_hour, pkl_minutes)
-
-def find_pickles_by_day(abs_day, year, cloudsat_dir):
-    """ returns list of pickle filenames of specified day, and of previous and following day """
+def find_cloudsat_by_day(abs_day, year, cloudsat_dir):
+    """ returns list of filenames of specified day, and of previous and following day """
 
     cloudsat_filenames = []
 
     for i in range(-1, 2):
 
-        month, day = get_month_day(abs_day + i, year)
-
-        # get all cloudsat pickles of that day
-        str_month_day = "{}_{}_".format(month, day)
-        cloudsat_filenames += glob.glob(os.path.join(cloudsat_dir, "{}*.pkl".format(str_month_day)))
+        pattern = "{}{}*.hdf".format(year, abs_day + i)
+        cloudsat_filenames += glob.glob(os.path.join(cloudsat_dir, pattern))
 
     return cloudsat_filenames
 
-def list_to_3d_array(list_labels):
+def find_matching_cloudsat_files(radiance_filename, cloudsat_dir):
+    """
+    :param radiance_filename: the filename for the radiance .hdf, demarcated with "MYD02".
+    :return cloudsat_filenames: a list of paths to the corresponding cloudsat files (1 or 2 files)
+    The time of the radiance file is used for selecting the cloudsat files: a MODIS swath is acquired every 5 minutes, while a CLOUDSAT granule is acquired every ~99 minutes. It can happen that a swath crosses over two granules. The filenames specify the starting time of the acquisition.
+    CLOUDSAT filenames are in the format: AAAADDDHHMMSS_*.hdf
+    """
 
-    p = len(list_labels)
-    array = np.zeros((8, p)) 
-
-    for i, labels in enumerate(list_labels):
-        for l in labels:
-
-            # keep only cloud types (0 is non-determined or error)
-            if l > 0:
-                array[l-1][i] += 1
-
-    return array
-
-def get_cloudsat_info(l1_filename, cloudsat_dir):
-    # MYD021KM.A2008003.1855.061.2018031033116.hdf l1
-    # 1_3_18_15.pkl cloudsat
-
+    basename = os.path.basename(radiance_filename)
+    
     time_info = l1_filename.split('MYD021KM.A')[1]
     year, abs_day = int(time_info[:4]), int(time_info[4:7])
-    month, day = get_month_day(abs_day, year)
     hour, minutes = int(time_info[8:10]), int(time_info[10:12])
 
-    swath_dt = datetime.datetime(year, month, day, hour, minutes)
+    swath_dt = get_datetime(year, abs_day, hour, minutes)
 
-    # get all candidate pickles
-    cloudsat_filenames = find_pickles_by_day(abs_day, year, cloudsat_dir)
-    
-    # collect all pickles before and after swath's time
+    cloudsat_filenames = find_cloudsat_by_day(abs_day, year, cloudsat_dir)
+
+    # collect all granules before and after swath's time
     prev_candidates, foll_candidates = [], []
 
     for filename in cloudsat_filenames:
 
-        dt = get_pickle_datetime(filename, year)
+        granule_dt = get_pickle_datetime(filename, year)
         
-        if dt <= swath_dt:
-            prev_candidates.append(dt)
+        if granule_dt <= swath_dt and (swath_dt - granule_dt).seconds < 6000:
+            prev_candidates.append(granule_dt)
 
-        else:
-            foll_candidates.append(dt)
+        elif (granule_dt - swath_dt).seconds < 300:
+            foll_candidates.append(granule_dt)
 
     prev_dt = max(prev_candidates)
-    foll_dt = min(foll_candidates)
 
-    # load cloudsat pickle
-    prev_filename = os.path.join(cloudsat_dir, "{}_{}_{}_{}.pkl".format(prev_dt.month, prev_dt.day, prev_dt.hour, prev_dt.minute))
-    print("retrieved cloudsat file", prev_filename)
+    # if swath crosses over two cloudsat granules, return both
+    if len(foll_candidates) > 0:
 
-    with open(prev_filename, "rb") as f:
+        foll_dt = min(foll_candidates)
 
-        # pickle containing three lists, corresponding to latitude, longitude and label
-        cloudsat_list = pickle.load(f)
-
-    # if swath crosses over two cloudsat pickles, merge them
-    if (foll_dt - swath_dt).seconds < 300:
-
-        # load cloudsat pickle
-        foll_filename = os.path.join(cloudsat_dir, "{}_{}_{}_{}.pkl".format(foll_dt.month, foll_dt.day, foll_dt.hour, foll_dt.minute))
-        print("merging labels with cloudsat file", foll_filename)
-        with open(foll_filename, "rb") as f:
+        return prev_dt, foll_dt
             
-            # concatenate the two pickles information
-            cloudsat_list = [cloudsat_list[i] + values for i, values in enumerate(pickle.load(f))]
-            
-    return cloudsat_list
+    return prev_dt 
 
-def get_track_oi(track_points, latitudes, longitudes):
-
-    min_lat = np.min(latitudes)
-    max_lat = np.max(latitudes)
-
-    min_lon = np.min(longitudes)
-    max_lon = np.max(longitudes)
+def get_coordinates(cloudsat_filenames, verbose=0):
     
-    return track_points[:, np.logical_and.reduce([[track_points[0] >= min_lat], [track_points[0] <= max_lat], [track_points[1] >= min_lon], [track_points[1] <= max_lon]]).squeeze()]
+    all_latitudes, all_longitudes = [], []
 
-def find_track_range(track_points, latitudes, longitudes):
+    for cloudsat_path in cloudsat_filenames:
+        f = HDF(cloudsat_path, SDC.READ) 
+        vs = f.vstart() 
+        
+        vdata_lat = vs.attach('Latitude')
+        vdata_long = vs.attach('Longitude')
 
-    i = random.randint(1, 2028)
+        latitudes = vdata_lat[:]
+        longitudes = vdata_long[:]
+        
+        assert len(latitudes) == len(longitudes), "cloudsat hdf corrupted"
+        
+        if verbose:
+            print("hdf information", vs.vdatainfo())
+            print('Nb pixels: ', len(latitudes))
+            print('Lat min, Lat max: ', min(latitudes), max(latitudes))
+            print('Long min, Long max: ', min(longitudes), max(longitudes))
 
-    i_lat, i_lon = latitudes[i-1:i+1, :], longitudes[i-1:i+1, :]
+        all_latitudes += latitudes
+        all_longitudes += longitudes
+
+        # close everything
+        vdata_lat.detach()
+        vdata_long.detach()
+        vs.end()
+        f.close()
     
-    i_track_points = get_track_oi(track_points, i_lat, i_lon)
+    return all_latitudes, all_longitudes
+
+def get_layer_information(cloudsat_filenames, verbose=0):
+    """ Returns
+    CloudLayerType: -9: error, 0: non determined, 1-8 cloud types 
+    CloudLayerBase: in km
+    CloudLayerTop: in km
+    CloudTypeQuality: valid range [0, 1]
+    """
     
-    i_mask = scalable_align(i_track_points, i_lat, i_lon)
+    all_types, all_bases, all_tops, all_qualities = [], [], [], []
 
-    idx_nonzeros = np.where(np.sum(i_mask, 2) != 0)
+    for cloudsat_path in cloudsat_filenames:
 
-    min_j, max_j = min(idx_nonzeros[1]), max(idx_nonzeros[1])
+        sd = SD(cloudsat_path, SDC.READ)
+        
+        if verbose:
+            # List available SDS datasets.
+            print("hdf datasets:", sd.datasets())
+        
+        # get cloud types at each height
+        all_types.append(sd.select('CloudLayerType').get())
+        all_bases.append(sd.select('CloudLayerBase').get())
+        all_tops.append(sd.select('CloudLayerTop').get())
+        all_qualities.append(sd.select('CloudTypeQuality').get())
 
-    return min_j - 100, max_j + 100
+    layer_type = np.vstack(all_types)
+    layer_base = np.vstack(all_bases)
+    layer_top = np.vstack(all_tops)
+    layer_type_quality = np.vstack(all_qualities)
 
-def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
+    return layer_type, layer_base, layer_top, layer_type_quality
 
-    cloudsat_list = get_cloudsat_info(l1_filename, cloudsat_dir)
+def get_class_occurrences(layer_types):
+    """ 
+    Takes in a numpy.ndarray of size (nb_points, 10) describing for each point of the track the types of clouds
+    identified at each of the 10 heights and returns a numpy.ndarray of size (nb_points, 8) counting the number 
+    of times one of the 8 type of clouds was spotted vertically.
+    The height information is then lost. 
+    """
     
-    cloudsat = np.array([[c[0] for c in cloudsat_list[i]] for i in range(2)])
-    cloudsat = np.vstack((cloudsat, list_to_3d_array(cloudsat_list[2])))   
+    occurrences = np.zeros((layer_types.shape[0], 8))
+    
+    for occ, labels in zip(occurrences, layer_types):
+        
+        for l in labels:
+                
+            # keep only cloud types (no 0 or -9)
+            if l > 0:
+                occ[l-1] += 1
+    
+    return occurrences    
+
+def get_cloudsat_mask(l1_filename, cloudsat_dir, swath_latitudes, swath_longitudes):
+
+    cloudsat_filenames = find_matching_cloudsat_files(l1_filename, cloudsat_dir)
+    cs_latitudes, cs_longitudes = get_coordinates(cloudsat_filenames)
+    layer_type, layer_base, layer_top, layer_type_quality = get_layer_information(cloudsat_filenames) 
 
     # focus around cloudsat track
-    cs_range = find_track_range(cloudsat, latitudes, longitudes)
-    lat, lon = latitudes[:, cs_range[0]:cs_range[1]], longitudes[:, cs_range[0]:cs_range[1]]
+    cs_range = find_track_range(cs_latitudes, cs_longitudes, swath_latitudes, swath_longitudes)
+    lat, lon = swath_latitudes[:, cs_range[0]:cs_range[1]], swath_longitudes[:, cs_range[0]:cs_range[1]]
 
-    track_points = get_track_oi(cloudsat, lat, lon)
-    cloudsat_mask = scalable_align(track_points, lat, lon)
+    toi_indices = get_track_oi(cs_latitudes, cs_longitudes, lat, lon)
+    cs_latitudes, cs_longitudes, layer_type, layer_base, layer_top, layer_type_quality = cs_latitudes[toi_indices], cs_longitudes[toi_indices], layer_type[toi_indices], layer_base[toi_indices], layer_top[toi_indices], layer_type_quality[toi_indices]
+
+    mapping = scalable_align(cs_latitudes, cs_longitudes, lat, lon)
+    class_counts = get_class_occurrences(layer_type)
+    cloudsat_mask = map_labels(mapping, class_counts, lat.shape, nb_classes=8)
 
     # remove labels on egdes
     cloudsat_mask[0] = 0
@@ -149,10 +175,10 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, latitudes, longitudes):
     print("retrieved", np.sum(cloudsat_mask > 0), "labels")
     
     # go back to initial swath size
-    ext_cloudsat_mask = np.zeros((*(latitudes.shape), 8))
+    ext_cloudsat_mask = np.zeros((*(swath_latitudes.shape), 8))
     ext_cloudsat_mask[:, cs_range[0]:cs_range[1], :] = cloudsat_mask
 
-    return ext_cloudsat_mask.transpose(2, 0, 1).astype(np.uint8)    
+    return ext_cloudsat_mask.transpose(2, 0, 1).astype(np.uint8), cs_range, mapping, layer_type, layer_base, layer_top, layer_type_quality    
 
 
 if __name__ == "__main__":
@@ -164,18 +190,24 @@ if __name__ == "__main__":
     target_filepath = sys.argv[1]
     head, tail = os.path.split(target_filepath)
 
-    cloudsat_dir="/mnt/disks/disk10/aqua-data/collocated_classes/cc_with_hours/"
+    cloudsat_dir="/mnt/disks/disk10/aqua-data/cloudsat_CC/"
 
-    save_dir = "../DATA/aqua-data-processed/labelmask/"
+    save_dir = "../DATA/aqua-data-processed/cloudsat/labelmasks/"
+    save_dir_layer = "../DATA/aqua-data-processed/cloudsat/layers/"
 
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
+    for d in [save_dir, save_dir_layer]:
+        if not os.path.exists(d):
+            os.makedirs(d)
 
     # pull a numpy array from the hdfs
     np_swath = modis_level1.get_swath(target_filepath)
 
-    lm = get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
+    lm, cs_range, mapping, layer_type, layer_base, layer_top, layer_type_quality = get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
     savepath = os.path.join(save_dir, tail.replace(".hdf", ".npy"))
     np.save(savepath, lm, allow_pickle=False)
+
+    savepath = os.path.join(save_dir_layer, tail.replace(".hdf", ".npy"))
+    cs_dict = {"width-range": cs_range, "mapping": mapping, "type-layer": layer_type, "base-layer": layer_base, "top-layer": layer_top, "type-quality": layer_type_quality}
+    np.save(savepath, cs_dict)
