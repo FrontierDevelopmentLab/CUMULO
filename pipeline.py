@@ -203,8 +203,8 @@ if __name__ == "__main__":
     extract_swath_rbg(target_filepath, save_subdir, verbose=1)
 
     # extract tiles for Machine Learning purposes
-    if np_swath.shape != (27, 2030, 1350):
-        print("Failed to extract tiles: tiles are extracted only from swaths with label mask")
+    if np_swath.shape != (27, 2030, 1354):
+        print("Failed to extract tiles: tiles are extracted only from swaths with label mask", np_swath.shape)
         exit(0)
 
     if "fucked" in save_subdir:
