@@ -31,7 +31,7 @@ def get_matching_l2_filename(radiance_filename, l2_dir):
 
 def get_lwp_cod_ctp(l1_filename, l2_dir):
 
-    """ take in the level 1 filename and rootdir for the level 2 data, returns liquid water path (lwp), cloud top pressure (ctp) and cloud optical depth (cod)"""
+    """ take in the level 1 filename and rootdir for the level 2 data, returns an np.array of size (10, 2030, 1354) with all l2 channels"""
 
     filename = get_matching_l2_filename(l1_filename, l2_dir)
 
@@ -45,12 +45,11 @@ def get_lwp_cod_ctp(l1_filename, l2_dir):
     cth = level_data.select('cloud_top_height_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
     cpi = level_data.select('Cloud_Phase_Infrared_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
     ctt = level_data.select('cloud_top_temperature_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
-    cer = level_data.select('cloud_effective_radius_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
     cee = level_data.select('cloud_effective_emissivity_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
 
     st = level_data.select('surface_temperature_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
     
-    channels = np.stack([lwp, cod, cer, ctp, cth, cpi, ctt, cer, cee, st])
+    channels = np.stack([lwp, cod, cer, ctp, cth, cpi, ctt, cee, st])
 
     return channels.astype(np.float16)
 

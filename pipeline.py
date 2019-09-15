@@ -12,14 +12,14 @@ import src.tile_extraction
 
 def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir, save_dir, verbose=1):
     """
-    :param target_filepath: the filepath of the radiance (MOD02) input file
+    :param target_filepath: the filepath of the radiance (MYD02) input file
     :param level2_dir: the root directory of l2 level files
     :param cloudmask_dir: the root directory to cloud mask files
     :param cloudsat_dir: the root directory of cloudsat pkl files
     :param save_dir:
     :param verbose: verbosity switch: 0 - silent, 1 - verbose, 2 - partial, only prints confirmation at end
     :return: none
-    Expects to find a corresponding MOD03 file in the same directory. Comments throughout
+    Expects to find a corresponding MYD03 file in the same directory. Comments throughout
     """
 
     _, tail = os.path.split(target_filepath)
@@ -150,11 +150,11 @@ def save_tiles_separately(tiles, swath_name, save_dir, tile_size=3):
 
 def extract_swath_rbg(radiance_filepath, save_dir, verbose=1):
     """
-    :param radiance_filepath: the filepath of the radiance (MOD02) input file
+    :param radiance_filepath: the filepath of the radiance (MYD02) input file
     :param save_dir:
     :param verbose: verbosity switch: 0 - silent, 1 - verbose, 2 - partial, only prints confirmation at end
     :return: none
-    Generate and save RBG channels of the given MODIS file. Expects to find a corresponding MOD03 file in the same directory. Comments throughout
+    Generate and save RBG channels of the given MYDIS file. Expects to find a corresponding MYD03 file in the same directory. Comments throughout
     """
 
     basename = os.path.basename(radiance_filepath)
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     np_swath, save_subdir, swath_name = extract_full_swath(target_filepath,
                                 level2_dir="/mnt/disks/disk10/aqua-data/level_2",
                                 cloudmask_dir="/mnt/disks/disk10/aqua-data/cloud_mask",
-                                cloudsat_dir="/mnt/disks/disk10/aqua-data/collocated_classes/cc_with_hours",
+                                cloudsat_dir="/mnt/disks/disk10/aqua-data/cloudsat_CC/",
                                 save_dir=save_dir,
                                 verbose=1)
     
@@ -203,7 +203,7 @@ if __name__ == "__main__":
     extract_swath_rbg(target_filepath, save_subdir, verbose=1)
 
     # extract tiles for Machine Learning purposes
-    if np_swath.shape != (27, 2030, 1354):
+    if np_swath.shape != (33, 2030, 1354):
         print("Failed to extract tiles: tiles are extracted only from swaths with label mask", np_swath.shape)
         exit(0)
 

@@ -177,8 +177,8 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, swath_latitudes, swath_longitud
     cloudsat_mask = map_labels(mapping, class_counts, lat.shape, nb_classes=8)
 
     # remove labels on egdes
-    cloudsat_mask[0] = 0
-    cloudsat_mask[-1] = 0
+    cloudsat_mask[:10] = 0
+    cloudsat_mask[:-11:-1] = 0
 
     print("retrieved", np.sum(cloudsat_mask > 0), "labels")
     
