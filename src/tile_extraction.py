@@ -155,7 +155,7 @@ def extract_cloudy_labelled_tiles(swath_array, cloud_mask, label_mask, tile_size
 
     return tiles, positions
 
-def sample_labelled_and_unlabelled_tiles(swath_array, cloudmask_idx=18, labelmask_idx=(19, 20, 21, 22, 23, 24, 25, 26), tile_size=3):
+def sample_labelled_and_unlabelled_tiles(swath_array, cloudmask_idx=24, labelmask_idx=(25, 26, 27, 28, 29, 30, 31, 32), tile_size=3):
     """
     :param swath_array: numpy of a swath
     :param tile_size: size of tile (default 3)

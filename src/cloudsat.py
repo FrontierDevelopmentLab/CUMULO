@@ -68,7 +68,7 @@ def find_matching_cloudsat_files(radiance_filename, cloudsat_dir):
     if len(foll_candidates.keys()) > 0:
         
         foll_dt = min(foll_candidates.keys())
-        print(foll_dt, prev_dt)
+        
         return prev_candidates[prev_dt], foll_candidates[foll_dt]
             
     return [prev_candidates[prev_dt]] 
@@ -166,7 +166,6 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, swath_latitudes, swath_longitud
 
     # focus around cloudsat track
     cs_range = find_track_range(cs_latitudes, cs_longitudes, swath_latitudes, swath_longitudes)
-    print(cs_range)
     lat, lon = swath_latitudes[:, cs_range[0]:cs_range[1]], swath_longitudes[:, cs_range[0]:cs_range[1]]
 
     toi_indices = get_track_oi(cs_latitudes, cs_longitudes, lat, lon)

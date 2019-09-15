@@ -29,7 +29,7 @@ def get_matching_l2_filename(radiance_filename, l2_dir):
     l2_filename = glob.glob(os.path.join(l2_dir, head_parts[-3], head_parts[-2], head_parts[-1], 'MYD06_L2.{}.{}.*.hdf'.format(tail_parts[1], tail_parts[2])))[0]
     return l2_filename
 
-def get_lwp_cod_ctp(l1_filename, l2_dir):
+def get_channels(l1_filename, l2_dir):
 
     """ take in the level 1 filename and rootdir for the level 2 data, returns an np.array of size (10, 2030, 1354) with all l2 channels"""
 
@@ -40,16 +40,16 @@ def get_lwp_cod_ctp(l1_filename, l2_dir):
     lwp = level_data.select('Cloud_Water_Path').get()[:MAX_HEIGHT,:MAX_WIDTH]
     cod = level_data.select('Cloud_Optical_Thickness').get()[:MAX_HEIGHT,:MAX_WIDTH]
     cer = level_data.select('Cloud_Effective_Radius').get()[:MAX_HEIGHT,:MAX_WIDTH]
+    cpop = level_data.select('Cloud_Phase_Optical_Properties').get()[:MAX_HEIGHT,:MAX_WIDTH]
 
     ctp = level_data.select('cloud_top_pressure_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
     cth = level_data.select('cloud_top_height_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
-    cpi = level_data.select('Cloud_Phase_Infrared_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
     ctt = level_data.select('cloud_top_temperature_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
-    cee = level_data.select('cloud_effective_emissivity_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
+    cee = level_data.select('cloud_emissivity_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
 
     st = level_data.select('surface_temperature_1km').get()[:MAX_HEIGHT,:MAX_WIDTH]
     
-    channels = np.stack([lwp, cod, cer, ctp, cth, cpi, ctt, cee, st])
+    channels = np.stack([lwp, cod, cer, cpop, ctp, cth, ctt, cee, st])
 
     return channels.astype(np.float16)
 
