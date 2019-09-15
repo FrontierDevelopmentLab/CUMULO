@@ -13,7 +13,7 @@ def get_track_oi(cs_latitudes, cs_longitudes, swath_latitudes, swath_longitudes)
 
 def find_track_range(cs_latitudes, cs_longitudes, latitudes, longitudes):
 
-    i = random.randint(1, MAX_HEIGHT - 2)
+    i = MAX_HEIGHT // 2
 
     i_lat, i_lon = latitudes[i-1:i+1, :], longitudes[i-1:i+1, :]
     
