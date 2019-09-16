@@ -27,7 +27,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
     # creating the save directories
     save_dir_daylight = os.path.join(save_dir, "daylight")
     save_dir_night = os.path.join(save_dir, "night")
-    save_dir_fucked = os.path.join(save_dir, "fucked")
+    save_dir_fucked = os.path.join(save_dir, "corrupt")
 
     for dr in [save_dir_daylight, save_dir_night, save_dir_fucked]:
         if not os.path.exists(dr):
