@@ -73,20 +73,20 @@ def find_matching_cloudsat_files(radiance_filename, cloudsat_dir):
             
     return [prev_candidates[prev_dt]] 
 
-def get_precip_flag(cloudsat_filenames, cloudsat_dir, verbose=0):
+def get_precip_flag(cloudsat_filenames, cloudsat_dir, verbose=1):
 
     all_flags = []
 
     for cloudsat_path in cloudsat_filenames:
-
+        
         basename = os.path.basename(cloudsat_path)
         filename = glob.glob(os.path.join(cloudsat_dir, basename[4:7], basename[:11] + "*.hdf"))[0]
-        
+        print(filename)
         f = HDF(cloudsat_path, SDC.READ) 
         vs = f.vstart() 
         
-        vdata_precip = vs.attach('Precip_flag')
-        precip = vdata_precip[:]
+        #vdata_precip = vs.attach('Precip_flag')
+        #precip = vdata_precip[:]
         
         if verbose:
             print("hdf information", vs.vdatainfo())
@@ -103,12 +103,12 @@ def get_precip_flag(cloudsat_filenames, cloudsat_dir, verbose=0):
     
     return np.array(all_flags).flatten().astype(np.int8)
 
-def get_coordinates(cloudsat_filenames, verbose=0):
+def get_coordinates(cloudsat_filenames, verbose=1):
     
     all_latitudes, all_longitudes = [], []
 
     for cloudsat_path in cloudsat_filenames:
-        
+        print(cloudsat_path)        
         f = HDF(cloudsat_path, SDC.READ) 
         vs = f.vstart() 
         
@@ -228,10 +228,11 @@ if __name__ == "__main__":
     target_filepath = sys.argv[1]
     head, tail = os.path.split(target_filepath)
 
-    cloudsat_dir="../DATA/aqua-data/cloudsat_CC/"
+    cloudsat_lidar_dir="/mnt/disks/disk1/aqua-data/cloudsat_CC/"
+    cloudsat_dir = "/mnt/disks/disk1/aqua-data/cloudsat_CC/2008/"
 
-    save_dir = "../DATA/aqua-data-processed/cloudsat/labelmasks/"
-    save_dir_layer = "../DATA/aqua-data-processed/cloudsat/layers/"
+    save_dir = "../test/aqua-data-processed/cloudsat/labelmasks/"
+    save_dir_layer = "../test/aqua-data-processed/cloudsat/layers/"
 
     for d in [save_dir, save_dir_layer]:
         if not os.path.exists(d):
@@ -240,7 +241,7 @@ if __name__ == "__main__":
     # pull a numpy array from the hdfs
     np_swath = modis_level1.get_swath(target_filepath)
 
-    lm, cs_range, mapping, layer_type, layer_base, layer_top, layer_type_quality, precip_flag = get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
+    lm, cs_range, mapping, layer_type, layer_base, layer_top, layer_type_quality, precip_flag = get_cloudsat_mask(target_filepath, cloudsat_lidar_dir, cloudsat_dir, np_swath[-2], np_swath[-1])
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
     savepath = os.path.join(save_dir, tail.replace(".hdf", ".npy"))

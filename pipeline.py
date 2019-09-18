@@ -102,14 +102,18 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lida
 
     if verbose:
         print("swath saved as {}".format(swath_savepath_str))
-
-    layer_info_savepath = os.path.join(save_subdir, "layer-info")
     
-    if not os.path.exists(layer_info_savepath):
-        os.makedirs(layer_info_savepath)
+    try:
+        layer_info_savepath = os.path.join(save_subdir, "layer-info")
+    
+        if not os.path.exists(layer_info_savepath):
+            os.makedirs(layer_info_savepath)
 
-    cs_dict = {"width-range": additional_info[0], "mapping": additional_info[1], "type-layer": additional_info[2], "base-layer": additional_info[3], "top-layer": additional_info[4], "type-quality": additional_info[5], "precip-flag": additional_info[6]}
-    np.save(os.path.join(layer_info_savepath, tail.replace(".hdf", ".npy")), cs_dict)
+        cs_dict = {"width-range": additional_info[0], "mapping": additional_info[1], "type-layer": additional_info[2], "base-layer": additional_info[3], "top-layer": additional_info[4], "type-quality": additional_info[5], "precip-flag": additional_info[6]}
+        np.save(os.path.join(layer_info_savepath, tail.replace(".hdf", ".npy")), cs_dict)
+
+    except:
+        pass
 
     return np_swath, save_subdir, tail
 
@@ -199,13 +203,13 @@ if __name__ == "__main__":
     target_filepath = sys.argv[2]
     save_dir = sys.argv[1]
     
-    root_dir = "../DATA/"
+    root_dir = "/mnt/disks/disk1/"
     # extract training channels, validation channels, cloud mask, class occurences if provided
     np_swath, save_subdir, swath_name = extract_full_swath(target_filepath,
                                 level2_dir=root_dir+"aqua-data/level_2",
-                                cloudmask_dir=root_dir+"/aqua-data/cloud_mask",
-                                cloudsat_lidar_dir=root_dir+"/aqua-data/cloudsat_CC/",
-                                cloudsat_dir=root_dir+"/aqua-data/cloudsat_CC/2008/"
+                                cloudmask_dir=root_dir+"aqua-data/cloud_mask",
+                                cloudsat_lidar_dir=root_dir+"aqua-data/cloudsat_CC/",
+                                cloudsat_dir=root_dir+"aqua-data/cloudsat_CC/2008/",
                                 save_dir=save_dir,
                                 verbose=1)
     
