@@ -10,12 +10,13 @@ import src.modis_level1
 import src.modis_level2
 import src.tile_extraction
 
-def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir, save_dir, verbose=1):
+def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lidar_dir, cloudsat_dir, save_dir, verbose=1):
     """
     :param target_filepath: the filepath of the radiance (MYD02) input file
     :param level2_dir: the root directory of l2 level files
     :param cloudmask_dir: the root directory to cloud mask files
-    :param cloudsat_dir: the root directory of cloudsat pkl files
+    :param cloudsat_dir: the root directory of cloudsat-lidar files
+    :param cloudsat_dir: the root directory of cloudsat files
     :param save_dir:
     :param verbose: verbosity switch: 0 - silent, 1 - verbose, 2 - partial, only prints confirmation at end
     :return: none
@@ -79,7 +80,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
 
     try:
 
-        lm, *layer_info = src.cloudsat.get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
+        lm, *additional_info = src.cloudsat.get_cloudsat_mask(target_filepath, cloudsat_lidar_dir, cloudsat_dir, np_swath[-2], np_swath[-1])
         np_swath = np.vstack([np_swath, l2_channels, cm[None, ], lm])
 
     except Exception as e:
@@ -107,7 +108,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_dir,
     if not os.path.exists(layer_info_savepath):
         os.makedirs(layer_info_savepath)
 
-    cs_dict = {"width-range": layer_info[0], "mapping": layer_info[1], "type-layer": layer_info[2], "base-layer": layer_info[3], "top-layer": layer_info[4], "type-quality": layer_info[5]}
+    cs_dict = {"width-range": additional_info[0], "mapping": additional_info[1], "type-layer": additional_info[2], "base-layer": additional_info[3], "top-layer": additional_info[4], "type-quality": additional_info[5], "precip-flag": additional_info[6]}
     np.save(os.path.join(layer_info_savepath, tail.replace(".hdf", ".npy")), cs_dict)
 
     return np_swath, save_subdir, tail
@@ -203,7 +204,8 @@ if __name__ == "__main__":
     np_swath, save_subdir, swath_name = extract_full_swath(target_filepath,
                                 level2_dir=root_dir+"aqua-data/level_2",
                                 cloudmask_dir=root_dir+"/aqua-data/cloud_mask",
-                                cloudsat_dir=root_dir+"/aqua-data/cloudsat_CC/",
+                                cloudsat_lidar_dir=root_dir+"/aqua-data/cloudsat_CC/",
+                                cloudsat_dir=root_dir+"/aqua-data/cloudsat_CC/2008/"
                                 save_dir=save_dir,
                                 verbose=1)
     

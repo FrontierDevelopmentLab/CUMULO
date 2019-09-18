@@ -73,6 +73,36 @@ def find_matching_cloudsat_files(radiance_filename, cloudsat_dir):
             
     return [prev_candidates[prev_dt]] 
 
+def get_precip_flag(cloudsat_filenames, cloudsat_dir, verbose=0):
+
+    all_flags = []
+
+    for cloudsat_path in cloudsat_filenames:
+
+        basename = os.path.basename(cloudsat_path)
+        filename = glob.glob(os.path.join(cloudsat_dir, basename[4:7], basename[:11] + "*.hdf"))[0]
+        
+        f = HDF(cloudsat_path, SDC.READ) 
+        vs = f.vstart() 
+        
+        vdata_precip = vs.attach('Precip_flag')
+        precip = vdata_precip[:]
+        
+        if verbose:
+            print("hdf information", vs.vdatainfo())
+            print('Nb pixels: ', len(precip))
+            print('Precip_flag values: ', np.unique(precip))
+
+        all_flags += precip
+
+        # close everything
+        vdata_precip.detach()
+
+        vs.end()
+        f.close()
+    
+    return np.array(all_flags).flatten().astype(np.int8)
+
 def get_coordinates(cloudsat_filenames, verbose=0):
     
     all_latitudes, all_longitudes = [], []
@@ -136,7 +166,7 @@ def get_layer_information(cloudsat_filenames, verbose=0):
     layer_top = np.vstack(all_tops)
     layer_type_quality = np.vstack(all_qualities)
 
-    return layer_type, layer_base, layer_top, layer_type_quality
+    return layer_type.astype(np.int8), layer_base.astype(np.float16), layer_top.astype(np.float16), layer_type_quality.astype(np.float16)
 
 def get_class_occurrences(layer_types):
     """ 
@@ -158,10 +188,11 @@ def get_class_occurrences(layer_types):
     
     return occurrences    
 
-def get_cloudsat_mask(l1_filename, cloudsat_dir, swath_latitudes, swath_longitudes):
+def get_cloudsat_mask(l1_filename, cloudsat_lidar_dir, cloudsat_dir, swath_latitudes, swath_longitudes):
 
-    cloudsat_filenames = find_matching_cloudsat_files(l1_filename, cloudsat_dir)
+    cloudsat_filenames = find_matching_cloudsat_files(l1_filename, cloudsat_lidar_dir)
     cs_latitudes, cs_longitudes = get_coordinates(cloudsat_filenames)
+    precip_flag = get_precip_flag(cloudsat_filenames, cloudsat_dir)
     layer_type, layer_base, layer_top, layer_type_quality = get_layer_information(cloudsat_filenames) 
 
     # focus around cloudsat track
@@ -169,7 +200,7 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, swath_latitudes, swath_longitud
     lat, lon = swath_latitudes[:, cs_range[0]:cs_range[1]], swath_longitudes[:, cs_range[0]:cs_range[1]]
 
     toi_indices = get_track_oi(cs_latitudes, cs_longitudes, lat, lon)
-    cs_latitudes, cs_longitudes, layer_type, layer_base, layer_top, layer_type_quality = cs_latitudes[toi_indices], cs_longitudes[toi_indices], layer_type[toi_indices], layer_base[toi_indices], layer_top[toi_indices], layer_type_quality[toi_indices]
+    cs_latitudes, cs_longitudes, precip_flag, layer_type, layer_base, layer_top, layer_type_quality = cs_latitudes[toi_indices], cs_longitudes[toi_indices], precip_flag[toi_indices], layer_type[toi_indices], layer_base[toi_indices], layer_top[toi_indices], layer_type_quality[toi_indices]
 
     mapping = scalable_align(cs_latitudes, cs_longitudes, lat, lon)
     class_counts = get_class_occurrences(layer_type)
@@ -185,7 +216,7 @@ def get_cloudsat_mask(l1_filename, cloudsat_dir, swath_latitudes, swath_longitud
     ext_cloudsat_mask = np.zeros((*(swath_latitudes.shape), 8))
     ext_cloudsat_mask[:, cs_range[0]:cs_range[1], :] = cloudsat_mask
 
-    return ext_cloudsat_mask.transpose(2, 0, 1).astype(np.uint8), cs_range, mapping, layer_type, layer_base, layer_top, layer_type_quality    
+    return ext_cloudsat_mask.transpose(2, 0, 1).astype(np.uint8), cs_range, mapping, layer_type, layer_base, layer_top, layer_type_quality, precip_flag    
 
 
 if __name__ == "__main__":
@@ -209,12 +240,12 @@ if __name__ == "__main__":
     # pull a numpy array from the hdfs
     np_swath = modis_level1.get_swath(target_filepath)
 
-    lm, cs_range, mapping, layer_type, layer_base, layer_top, layer_type_quality = get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
+    lm, cs_range, mapping, layer_type, layer_base, layer_top, layer_type_quality, precip_flag = get_cloudsat_mask(target_filepath, cloudsat_dir, np_swath[-2], np_swath[-1])
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
     savepath = os.path.join(save_dir, tail.replace(".hdf", ".npy"))
     np.save(savepath, lm, allow_pickle=False)
 
     savepath = os.path.join(save_dir_layer, tail.replace(".hdf", ".npy"))
-    cs_dict = {"width-range": cs_range, "mapping": mapping, "type-layer": layer_type, "base-layer": layer_base, "top-layer": layer_top, "type-quality": layer_type_quality}
+    cs_dict = {"width-range": cs_range, "mapping": mapping, "type-layer": layer_type, "base-layer": layer_base, "top-layer": layer_top, "type-quality": layer_type_quality, "precip-flag": precip_flag}
     np.save(savepath, cs_dict)
