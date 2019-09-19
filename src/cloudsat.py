@@ -73,7 +73,7 @@ def find_matching_cloudsat_files(radiance_filename, cloudsat_dir):
             
     return [prev_candidates[prev_dt]] 
 
-def get_precip_flag(cloudsat_filenames, cloudsat_dir, verbose=1):
+def get_precip_flag(cloudsat_filenames, cloudsat_dir, verbose=0):
 
     all_flags = []
 
@@ -81,12 +81,12 @@ def get_precip_flag(cloudsat_filenames, cloudsat_dir, verbose=1):
         
         basename = os.path.basename(cloudsat_path)
         filename = glob.glob(os.path.join(cloudsat_dir, basename[4:7], basename[:11] + "*.hdf"))[0]
-        print(filename)
-        f = HDF(cloudsat_path, SDC.READ) 
+        
+        f = HDF(filename, SDC.READ) 
         vs = f.vstart() 
         
-        #vdata_precip = vs.attach('Precip_flag')
-        #precip = vdata_precip[:]
+        vdata_precip = vs.attach('Precip_flag')
+        precip = vdata_precip[:]
         
         if verbose:
             print("hdf information", vs.vdatainfo())
@@ -103,12 +103,12 @@ def get_precip_flag(cloudsat_filenames, cloudsat_dir, verbose=1):
     
     return np.array(all_flags).flatten().astype(np.int8)
 
-def get_coordinates(cloudsat_filenames, verbose=1):
+def get_coordinates(cloudsat_filenames, verbose=0):
     
     all_latitudes, all_longitudes = [], []
 
     for cloudsat_path in cloudsat_filenames:
-        print(cloudsat_path)        
+                
         f = HDF(cloudsat_path, SDC.READ) 
         vs = f.vstart() 
         
