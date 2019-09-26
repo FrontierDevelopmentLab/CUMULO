@@ -63,7 +63,6 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lida
         save_subdir = save_dir_fucked
 
     # pull L2 channels here
-    # this includes only LWP, cloud optical depth, cloud top pressure in this order
     l2_channels = src.modis_level2.get_channels(target_filepath, level2_dir)
     
     if verbose:

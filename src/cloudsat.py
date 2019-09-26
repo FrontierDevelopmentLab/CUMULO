@@ -56,10 +56,10 @@ def find_matching_cloudsat_files(radiance_filename, cloudsat_dir):
 
         granule_dt = get_datetime(year, day, hour, minute, second)
 
-        if granule_dt <= swath_dt and (swath_dt - granule_dt).seconds < 6000:
+        if granule_dt <= swath_dt and (swath_dt - granule_dt).total_seconds() < 6000:
             prev_candidates[granule_dt] = filename
 
-        elif granule_dt >= swath_dt and (granule_dt - swath_dt).seconds < 300:
+        elif granule_dt >= swath_dt and (granule_dt - swath_dt).total_seconds() < 300:
             foll_candidates[granule_dt] = filename
 
     prev_dt = max(prev_candidates.keys())
