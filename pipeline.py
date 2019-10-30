@@ -15,7 +15,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lida
     :param target_filepath: the filepath of the radiance (MYD02) input file
     :param level2_dir: the root directory of l2 level files
     :param cloudmask_dir: the root directory to cloud mask files
-    :param cloudsat_dir: the root directory of cloudsat-lidar files
+    :param cloudsat_lidar_dir: the root directory of cloudsat-lidar files
     :param cloudsat_dir: the root directory of cloudsat files
     :param save_dir:
     :param verbose: verbosity switch: 0 - silent, 1 - verbose, 2 - partial, only prints confirmation at end
