@@ -4,6 +4,7 @@ import sys
 
 import netCDF4 as nc4
 
+from src.track_alignment import map_and_reduce
 from src.utils import get_file_time_info, minutes_since    
 
 swath_channels = ['EV_250_Aggr1km_RefSB_1', 'EV_250_Aggr1km_RefSB_2', 'EV_1KM_Emissive_29', 'EV_1KM_Emissive_33', 'EV_1KM_Emissive_34', 'EV_1KM_Emissive_35', 'EV_1KM_Emissive_36', 'EV_1KM_RefSB_26', 'EV_1KM_Emissive_27', 'EV_1KM_Emissive_20', 'EV_1KM_Emissive_21', 'EV_1KM_Emissive_22', 'EV_1KM_Emissive_23', 'Latitude', 'Longitude', 'Cloud_Water_Path', 'Cloud_Optical_Thickness', 'Cloud_Effective_Radius', 'Cloud_Phase_Optical_Properties', 'cloud_top_pressure_1km', 'cloud_top_height_1km', 'cloud_top_temperature_1km', 'cloud_emissivity_1km', 'surface_temperature_1km', 'Cloud_Mask']
@@ -55,6 +56,7 @@ def copy_dataset(original_filename, copy_filename, deep=True):
 
             # Copy variables
             for name, var in block.variables.items():
+
                 new_var = new_block.createVariable(name, var.datatype, var.dimensions)
                 
                 # Copy variable attributes
@@ -65,6 +67,8 @@ def copy_dataset(original_filename, copy_filename, deep=True):
     return copy, variables
 
 def fill_dataset(dataset, variables, swath, layer_info, minutes, status="daylight", deep=True):
+
+    shape = swath[0].shape
 
     # set global variables and attributes
     dataset.status = status
@@ -87,24 +91,34 @@ def fill_dataset(dataset, variables, swath, layer_info, minutes, status="dayligh
 
         variables[channel][0] = swath[i].T
 
-    # for info_name, channel in layer_info_channels.items():
+    for info_name, channel in layer_info_channels.items():
 
-    # cs_dict = {"width-range": additional_info[0], "mapping": additional_info[1], "type-layer": additional_info[2], "base-layer": additional_info[3], "top-layer": additional_info[4], "type-quality": additional_info[5], "precip-flag": additional_info[6]}
+        # map data to swath format
+        if info_name == "precip-flag":
+            # precipitation flag is not available per layer
+            info = np.full(shape, variables[channel]._FillValue)
+            map_and_reduce(layer_info["mapping"], layer_info[info_name], info, layer_info["width-range"])
+            info = info.T
 
-    # ext_cloudsat_mask = np.zeros((*(swath_latitudes.shape), 8))
-    # ext_cloudsat_mask[:, cs_range[0]:cs_range[1], :] = cloudsat_mask
+        else:
 
-    # cur_ch_idx = 0
+            info = np.full((*shape, 10), variables[channel]._FillValue)
+            map_and_reduce(layer_info["mapping"], layer_info[info_name], info, layer_info["width-range"])
+            info = info.transpose(1, 0, 2)
 
-    # dataset_groups = dataset.groups.items()
+            # correct values, from [1, 8] to [0, 7]
+            if info_name == "type-layer":
+                info[info > -1] -= 1
+                info[info < 0] = variables[channel]._FillValue
 
+        variables[channel][0] = info
 
 def load_npys(swath_path, layer_info_dir="layer-info"):
 
     dirname, filename = os.path.split(swath_path)
 
     swath = np.load(swath_path)
-    layer_info_dict = np.load(os.path.join(dirname, layer_info_dir, filename))
+    layer_info_dict = np.load(os.path.join(dirname, layer_info_dir, filename)).item()
 
     return swath, layer_info_dict
 
