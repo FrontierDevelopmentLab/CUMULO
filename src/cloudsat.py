@@ -1,4 +1,3 @@
-import datetime
 import glob
 import numpy as np
 import os
@@ -9,12 +8,7 @@ from pyhdf.HDF import HDF
 from pyhdf.VS import VS
 
 from src.track_alignment import get_track_oi, find_track_range, map_labels, scalable_align
-
-def get_datetime(year, day, hour=0, minute=0, second=0):
-    """ Returns month and day given a day of a year"""
-
-    dt = datetime.datetime(year, 1, 1, hour, minute, second) + datetime.timedelta(days=day-1)
-    return dt
+from src.utils import get_datetime, get_file_time_info
 
 def find_cloudsat_by_day(abs_day, year, cloudsat_dir):
     """ returns list of filenames of specified day, and of previous and following day """
@@ -37,11 +31,10 @@ def find_matching_cloudsat_files(radiance_filename, cloudsat_dir):
     """
 
     basename = os.path.basename(radiance_filename)
-    
-    time_info = radiance_filename.split('MYD021KM.A')[1]
-    year, abs_day = int(time_info[:4]), int(time_info[4:7])
-    hour, minutes = int(time_info[8:10]), int(time_info[10:12])
 
+    year, abs_day, hour, minutes = get_file_time_info(basename)
+    year, abs_day, hour, minutes = int(year), int(abs_day), int(hour), int(minutes)
+    
     swath_dt = get_datetime(year, abs_day, hour, minutes)
 
     cloudsat_filenames = find_cloudsat_by_day(abs_day, year, cloudsat_dir)
