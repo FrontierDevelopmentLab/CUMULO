@@ -34,7 +34,7 @@ def find_matching_cloudsat_files(radiance_filename, cloudsat_dir):
 
     year, abs_day, hour, minutes = get_file_time_info(basename)
     year, abs_day, hour, minutes = int(year), int(abs_day), int(hour), int(minutes)
-    
+
     swath_dt = get_datetime(year, abs_day, hour, minutes)
 
     cloudsat_filenames = find_cloudsat_by_day(abs_day, year, cloudsat_dir)
@@ -163,9 +163,7 @@ def get_layer_information(cloudsat_filenames, verbose=0):
 
 def get_class_occurrences(layer_types):
     """ 
-    Takes in a numpy.ndarray of size (nb_points, 10) describing for each point of the track the types of clouds
-    identified at each of the 10 heights and returns a numpy.ndarray of size (nb_points, 8) counting the number 
-    of times one of the 8 type of clouds was spotted vertically.
+    Takes in a numpy.ndarray of size (nb_points, 10) describing for each point of the track the types of clouds identified at each of the 10 heights and returns a numpy.ndarray of size (nb_points, 8) counting the number of times one of the 8 type of clouds was spotted vertically.
     The height information is then lost. 
     """
     
@@ -197,7 +195,7 @@ def get_cloudsat_mask(l1_filename, cloudsat_lidar_dir, cloudsat_dir, swath_latit
 
     mapping = scalable_align(cs_latitudes, cs_longitudes, lat, lon)
     class_counts = get_class_occurrences(layer_type)
-    cloudsat_mask = map_labels(mapping, class_counts, lat.shape, nb_classes=8)
+    cloudsat_mask = map_labels(mapping, class_counts, lat.shape)
 
     # remove labels on egdes
     cloudsat_mask[:10] = 0

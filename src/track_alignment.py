@@ -1,6 +1,7 @@
 import numpy as np
 import random
 
+from scipy.stats import mode
 from sklearn.metrics.pairwise import manhattan_distances
 
 MAX_WIDTH, MAX_HEIGHT = 1354, 2030
@@ -38,7 +39,7 @@ def scalable_align(cs_lat, cs_lon, swath_lat, swath_lon):
 
     return mapping
 
-def map_labels(mapping, labels, shape, nb_classes=8):
+def map_labels(mapping, labels, shape):
 
     labelmask = np.zeros((*shape, labels.shape[1]))
 
@@ -46,6 +47,37 @@ def map_labels(mapping, labels, shape, nb_classes=8):
         labelmask[mapping[0][i], mapping[1][i]] += l
 
     return labelmask
+
+def map_and_reduce(mapping, track, swath, width_range, reduce_method="mode"):
+    """ modify swath!!! 
+        As multiple points from track can be mapped to the same point in swath, take the most common value.
+    """
+
+    shape = swath[:, width_range[0]:width_range[1]].shape
+
+    # cannot use np.ndarray as number of track points mapped to same swath point is unknown a priori
+    mapped_values = {}
+
+    for i, values in enumerate(track):
+
+        try:
+            mapped_values[mapping[0][i], mapping[1][i]].append(values)
+        except KeyError:
+            mapped_values[mapping[0][i], mapping[1][i]] = [values]
+
+    # reduce by mode
+    concat_axis = 1
+    if len(shape) < 3:
+        concat_axis = 0
+
+    for (i, j), values in mapped_values.items():
+
+        # remove values from edges that are luckily to have been oversampled
+        if i > 9 and i < shape[0] - 10:
+    
+            values = np.stack(values, concat_axis)
+
+            swath[:, width_range[0]:width_range[1]][i, j] = mode(values, axis=concat_axis)[0][0]
 
 if __name__ == "__main__":
 
