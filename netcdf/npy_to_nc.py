@@ -70,10 +70,6 @@ def fill_dataset(dataset, variables, swath, layer_info, minutes, status="dayligh
 
     shape = swath[0].shape
 
-    # set global variables and attributes
-    dataset.status = status
-    variables["Time"][0] = minutes
-
     for i, channel in enumerate(swath_channels):
 
         try:
@@ -113,6 +109,10 @@ def fill_dataset(dataset, variables, swath, layer_info, minutes, status="dayligh
 
         variables[channel][0] = info
 
+    # set global variables and attributes
+    dataset.status = status
+    dataset["Time"][0] = minutes
+
 def load_npys(swath_path, layer_info_dir="layer-info"):
 
     dirname, filename = os.path.split(swath_path)
@@ -131,10 +131,10 @@ if __name__ == "__main__":
     swath, layer_info = load_npys(swath_path)
 
     # get time info
-    year, abs_day, hour, minutes = get_file_time_info(swath_path)
+    year, abs_day, hour, minute = get_file_time_info(swath_path)
 
     # create a copy of reference dataset
-    copy_name = "A{}.{}.{}{}.nc".format(year, abs_day, hour, minutes)
+    copy_name = "A{}.{}.{}{}.nc".format(year, abs_day, hour, minute)
     copy, variables = copy_dataset("netcdf/cumulo.nc", copy_name)
 
     # determine swath status from directory hierarchy
@@ -145,6 +145,7 @@ if __name__ == "__main__":
         status = "night"
 
     # convert npy to nc
-    fill_dataset(copy, variables, swath, layer_info, minutes, status)
+    minutes_since_2008 = minutes_since(int(year), int(abs_day), int(hour), int(minute))
+    fill_dataset(copy, variables, swath, layer_info, minutes_since_2008, status)
 
     copy.close()
