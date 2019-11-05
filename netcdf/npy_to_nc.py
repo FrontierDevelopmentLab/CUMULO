@@ -110,7 +110,7 @@ def fill_dataset(dataset, variables, swath, layer_info, minutes, status="dayligh
         variables[channel][0] = info
 
     # set global variables and attributes
-    dataset.status = status
+    dataset.status_flag = status
     dataset["Time"][0] = minutes
 
 def load_npys(swath_path, layer_info_dir="layer-info"):
