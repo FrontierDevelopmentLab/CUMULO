@@ -77,7 +77,7 @@ def map_and_reduce(mapping, track, swath, width_range, reduce_method="mode"):
     
             values = np.stack(values, concat_axis)
 
-            swath[:, width_range[0]:width_range[1]][i, j] = mode(values, axis=concat_axis)[0][0]
+            swath[:, width_range[0]:width_range[1]][i, j] = mode(values, axis=concat_axis)[0].flatten()
 
 if __name__ == "__main__":
 
