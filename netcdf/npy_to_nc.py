@@ -87,27 +87,29 @@ def fill_dataset(dataset, variables, swath, layer_info, minutes, status="dayligh
 
         variables[channel][0] = swath[i].T
 
-    for info_name, channel in layer_info_channels.items():
+    if layer_info in not None:
+        
+        for info_name, channel in layer_info_channels.items():
 
-        # map data to swath format
-        if info_name == "precip-flag":
-            # precipitation flag is not available per layer
-            info = np.full(shape, variables[channel]._FillValue)
-            map_and_reduce(layer_info["mapping"], layer_info[info_name], info, layer_info["width-range"])
-            info = info.T
+            # map data to swath format
+            if info_name == "precip-flag":
+                # precipitation flag is not available per layer
+                info = np.full(shape, variables[channel]._FillValue)
+                map_and_reduce(layer_info["mapping"], layer_info[info_name], info, layer_info["width-range"])
+                info = info.T
 
-        else:
+            else:
 
-            info = np.full((*shape, 10), variables[channel]._FillValue)
-            map_and_reduce(layer_info["mapping"], layer_info[info_name], info, layer_info["width-range"])
-            info = info.transpose(1, 0, 2)
+                info = np.full((*shape, 10), variables[channel]._FillValue)
+                map_and_reduce(layer_info["mapping"], layer_info[info_name], info, layer_info["width-range"])
+                info = info.transpose(1, 0, 2)
 
-            # correct values, from [1, 8] to [0, 7]
-            if info_name == "type-layer":
-                info -= 1
-                info[info < 0] = variables[channel]._FillValue
+                # correct values, from [1, 8] to [0, 7]
+                if info_name == "type-layer":
+                    info -= 1
+                    info[info < 0] = variables[channel]._FillValue
 
-        variables[channel][0] = info
+            variables[channel][0] = info
 
     # set global variables and attributes
     dataset.status_flag = status
@@ -118,7 +120,12 @@ def load_npys(swath_path, layer_info_dir="layer-info"):
     dirname, filename = os.path.split(swath_path)
 
     swath = np.load(swath_path)
-    layer_info_dict = np.load(os.path.join(dirname, layer_info_dir, filename)).item()
+
+    try:
+        layer_info_dict = np.load(os.path.join(dirname, layer_info_dir, filename)).item()
+
+    except FileNotFoundError:
+        layer_info_dict = None
 
     return swath, layer_info_dict
 
