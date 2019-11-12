@@ -87,8 +87,8 @@ def fill_dataset(dataset, variables, swath, layer_info, minutes, status="dayligh
 
         variables[channel][0] = swath[i].T
 
-    if layer_info in not None:
-        
+    if layer_info is not None:
+
         for info_name, channel in layer_info_channels.items():
 
             # map data to swath format
