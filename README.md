@@ -1,53 +1,32 @@
-# Data Pipeline
+# CUMULO
 
-## Introduction
+Code sourse of CUMULO, a benchmark dataset for training and evaluating global cloud classification models. 
+It merges two satellite products from the [A-train constellation](https://atrain.nasa.gov/): 
+the [Moderate Resolution Imaging Spectroradiometer (MODIS) from Aqua satellite](https://modis.gsfc.nasa.gov/about/) and the [2B-CLDCLASS-LIDAR product](http://www.cloudsat.cira.colostate.edu/data-products/level-2b/2b-cldclass-lidar) derived from the combination of CloudSat Cloud Profiling Radar (CPR) and CALIPSO Cloud‐Aerosol Lidar with Orthogonal Polarization (CALIOP).
 
-To feed the AI and causal inference work downstream, we need to create a series of inter-linked scripts that take raw data in-bucket, and produce arrays and outputs ready for model ingestion.
 
-The major stages are:
-
-1. Pulling the data from the bucket to a pipeline instance.
-
-2. Extracting information from the MODIS `.hdf` files, using `satpy`, to produce usable arrays.
-3. Correcting for pixel-scale `NaN` artefacts inherited from the raw data.
-4. Extracting tiles from the processed arrays, ready for model ingestion.
-5. Pushing the arrays up to bucket, for project-wide consumption.
-
-### Requirements
-
-As this repository involves several different steps, the list of requirements is more extensive. In addition, the `satpy` installation can be very temperamental, so using environments is highly recommended.
+### Installation
 
 ```bash
-#To create the new env
-
-conda create -n pipeline python=3.7
-conda activate pipeline
-
-#Installation
 pip install gcsfs
 conda install -c conda-forge pyhdf  #The pip install's wheels are broken at time of writing
 pip install satpy
 pip install satpy[modis_l1b]
-pip install python-geotiepoints
+pip install -r requirements.txt
 ```
 
-There are also standard data science libraries used (`Numpy`, `Pandas` etc...). These are not fully described for brevity.
+### File Content
 
-### Gotchas
+To get an overview of CUMULO's variables and their descriptions, run
 
-#### `pyhdf` Permissions
-
-There is a known Gotcha with file permissions for installing `pyhdf`. If you end up with errors like:
-
-```sh
-[Errno 13] Permission denied: '/home/jupyter/.cph_tmpza9rngq5'
-[Errno 13] Permission denied: '/home/jupyter/.cph_tmpbt192k6i'
-[Errno 13] Permission denied: '/home/jupyter/.cph_tmpvzn6qtgo'
-[Errno 13] Permission denied: '/home/jupyter/.cph_tmpdrrqg__5'
+```bash
+ncdump -h netcdf/cumulo.nc
 ```
 
-run `sudo chown -R USERNAME:USERNAME /home/USERNAME/` replacing USERNAME with your user. Run the install again -  you should have a clean run.
+### Acknowledgments
 
-## Parallel Pipeline
+This work is the result of the 2019 ESA [Frontier Development Lab](https://fdleurope.org/) Atmospheric Phenomena andClimate Variability challenge.  We are grateful to all organisers, mentors and sponsors for providing us this opportunity. We thank Google Cloud for providing computing and storage resources to complete this work.
 
-The `run_pipeline.bash` file drives the script, piping MOD02 files and parallelising the code  using `xargs`. Tests show effective parallelisation, with 100% cpu utilisation across a 24 core instance.
+### Cite
+
+[Original paper](https://arxiv.org/abs/1911.04227)
