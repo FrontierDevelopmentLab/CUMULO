@@ -132,17 +132,21 @@ def load_npys(swath_path, layer_info_dir="layer-info"):
 
 if __name__ == "__main__":
 
-    swath_path = sys.argv[1]
-    save_dir = sys.argv[2]
+    swath_path = sys.argv[2]
+    save_dir = sys.argv[1]
 
     swath, layer_info = load_npys(swath_path)
 
     # get time info
     year, abs_day, hour, minute = get_file_time_info(swath_path)
 
+    # create save directory
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
     #create a copy of reference dataset
     copy_name = "A{}.{}.{}{}.nc".format(year, abs_day, hour, minute)
-    copy, variables = copy_dataset("netcdf/cumulo.nc", copy_name)
+    copy, variables = copy_dataset(os.path.join("netcdf", "cumulo.nc"), os.path.join(save_dir, copy_name))
 
     # determine swath status from directory hierarchy
     status = "corrupt"
