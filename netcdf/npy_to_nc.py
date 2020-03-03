@@ -30,7 +30,7 @@ channel_params = { # offset, scale_factor, min_value, max_value
     'surface_temperature' : [-15000, 0.00999999977648258, 0, 20000], 
 }
 
-def copy_dataset(original_filename, copy_filename, deep=True):
+def copy_dataset_structure(original_filename, copy_filename, deep=True, zlib=True):
     
     with nc4.Dataset(original_filename, 'r') as original:
 
@@ -57,7 +57,7 @@ def copy_dataset(original_filename, copy_filename, deep=True):
             # Copy variables
             for name, var in block.variables.items():
 
-                new_var = new_block.createVariable(name, var.datatype, var.dimensions)
+                new_var = new_block.createVariable(name, var.datatype, var.dimensions, zlib=zlib)
                 
                 # Copy variable attributes
                 new_var.setncatts({a : var.getncattr(a) for a in var.ncattrs()})
@@ -146,7 +146,7 @@ if __name__ == "__main__":
 
     #create a copy of reference dataset
     copy_name = "A{}.{}.{}{}.nc".format(year, abs_day, hour, minute)
-    copy, variables = copy_dataset(os.path.join("netcdf", "cumulo.nc"), os.path.join(save_dir, copy_name))
+    copy, variables = copy_dataset_structure(os.path.join("netcdf", "cumulo.nc"), os.path.join(save_dir, copy_name))
 
     # determine swath status from directory hierarchy
     status = "corrupt"
