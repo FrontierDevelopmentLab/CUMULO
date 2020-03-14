@@ -72,7 +72,7 @@ def map_and_reduce(mapping, track, swath, width_range, reduce_method="mode"):
 
     for (i, j), values in mapped_values.items():
 
-        # remove values from edges that are luckily to have been oversampled
+        # remove values from edges which are luckily to have been oversampled
         if i > 9 and i < shape[0] - 10:
     
             values = np.stack(values, concat_axis)
