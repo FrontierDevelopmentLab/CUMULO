@@ -10,7 +10,7 @@ import src.modis_level1
 import src.modis_level2
 import src.tile_extraction
 
-def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lidar_dir, cloudsat_dir, save_dir, verbose=1):
+def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lidar_dir, cloudsat_dir, save_dir, verbose=1, save=True):
     """
     :param target_filepath: the filepath of the radiance (MYD02) input file
     :param level2_dir: the root directory of l2 level files
@@ -28,9 +28,9 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lida
     # creating the save directories
     save_dir_daylight = os.path.join(save_dir, "daylight")
     save_dir_night = os.path.join(save_dir, "night")
-    save_dir_fucked = os.path.join(save_dir, "corrupt")
+    save_dir_corrupt = os.path.join(save_dir, "corrupt")
 
-    for dr in [save_dir_daylight, save_dir_night, save_dir_fucked]:
+    for dr in [save_dir_daylight, save_dir_night, save_dir_corrupt]:
         if not os.path.exists(dr):
             os.makedirs(dr)
 
@@ -60,7 +60,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lida
         save_subdir = save_dir_night
 
     else:
-        save_subdir = save_dir_fucked
+        save_subdir = save_dir_corrupt
 
     # pull L2 channels here
     l2_channels = src.modis_level2.get_channels(target_filepath, level2_dir)
@@ -97,10 +97,12 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lida
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
     swath_savepath_str = os.path.join(save_subdir, tail.replace(".hdf", ".npy"))
-    np.save(swath_savepath_str, np_swath, allow_pickle=False)
+    
+    if save:
+        np.save(swath_savepath_str, np_swath, allow_pickle=False)
 
-    if verbose:
-        print("swath saved as {}".format(swath_savepath_str))
+        if verbose:
+            print("swath saved as {}".format(swath_savepath_str))
     
     try:
         layer_info_savepath = os.path.join(save_subdir, "layer-info")
@@ -109,12 +111,15 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lida
             os.makedirs(layer_info_savepath)
 
         cs_dict = {"width-range": additional_info[0], "mapping": additional_info[1], "type-layer": additional_info[2], "base-layer": additional_info[3], "top-layer": additional_info[4], "type-quality": additional_info[5], "precip-flag": additional_info[6]}
-        np.save(os.path.join(layer_info_savepath, tail.replace(".hdf", ".npy")), cs_dict)
+        
+        if save:
+            np.save(os.path.join(layer_info_savepath, tail.replace(".hdf", ".npy")), cs_dict)
 
     except:
-        pass
+        
+        cs_dict = None
 
-    return np_swath, save_subdir, tail
+    return np_swath, cs_dict, save_subdir, tail
 
 def extract_tiles_from_swath(np_swath, swath_name, save_dir, tile_size=3, stride=3, verbose=1):
     # sample the swath for a selection of tiles and its associated metadata
@@ -199,30 +204,35 @@ def extract_swath_rbg(radiance_filepath, save_dir, verbose=1):
 if __name__ == "__main__":
 
     import sys
+    from netcdf.npy_to_nc import save_as_nc
+    
     target_filepath = sys.argv[2]
     save_dir = sys.argv[1]
     
     root_dir = "/mnt/disks/disk1/"
     # extract training channels, validation channels, cloud mask, class occurences if provided
-    np_swath, save_subdir, swath_name = extract_full_swath(target_filepath,
+    np_swath, layer_info, save_subdir, swath_name = extract_full_swath(target_filepath,
                                 level2_dir=root_dir+"aqua-data/level_2",
                                 cloudmask_dir=root_dir+"aqua-data/cloud_mask",
                                 cloudsat_lidar_dir=root_dir+"aqua-data/cloudsat_CC/",
                                 cloudsat_dir=root_dir+"aqua-data/cloudsat_CC/2008/",
                                 save_dir=save_dir,
-                                verbose=1)
-    
-    # extract visible channels for visualization purposes
+                                verbose=1, save=False)
+
+    # save swath as netcdf
+    save_as_nc(np_swath, layer_info, swath_name, save_subdir)
+
+    # save visible channels as png for visualization purposes
     extract_swath_rbg(target_filepath, save_subdir, verbose=1)
 
-    # extract tiles for Machine Learning purposes
-    if np_swath.shape != (33, 2030, 1354):
-        print("Failed to extract tiles: tiles are extracted only from swaths with label mask", np_swath.shape)
-        exit(0)
+    # # extract tiles for Machine Learning purposes
+    # if np_swath.shape != (33, 2030, 1354):
+    #     print("Failed to extract tiles: tiles are extracted only from swaths with label mask", np_swath.shape)
+    #     exit(0)
 
-    if "fucked" in save_subdir:
-        print("Failed to extract tiles: tiles are extracted only from swaths with fully interpolated non-visible channels")
-        exit(0)
+    # if "corrupt" in save_subdir:
+    #     print("Failed to extract tiles: tiles are extracted only from swaths with fully interpolated non-visible channels")
+    #     exit(0)
 
-    extract_tiles_from_swath(np_swath, swath_name, save_subdir)
+    # extract_tiles_from_swath(np_swath, swath_name, save_subdir)
 

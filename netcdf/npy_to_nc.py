@@ -129,6 +129,27 @@ def load_npys(swath_path, layer_info_dir="layer-info"):
 
     return swath, layer_info_dict
 
+def save_as_nc(swath, layer_info, swath_path, save_dir):
+
+    # get time info
+    year, abs_day, hour, minute = get_file_time_info(swath_path)
+
+    #create a copy of reference dataset
+    copy_name = "A{}.{}.{}{}.nc".format(year, abs_day, hour, minute)
+    copy, variables = copy_dataset_structure(os.path.join("netcdf", "cumulo.nc"), os.path.join(save_dir, copy_name))
+
+    # determine swath status from directory hierarchy
+    status = "corrupt"
+    if "daylight" in save_dir:
+        status = "daylight"
+    elif "night" in save_dir:
+        status = "night"
+
+    # convert npy to nc
+    minutes_since_2008 = minutes_since(int(year), int(abs_day), int(hour), int(minute))
+    fill_dataset(copy, variables, swath, layer_info, minutes_since_2008, status)
+
+    copy.close()
 
 if __name__ == "__main__":
 
