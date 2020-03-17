@@ -16,7 +16,7 @@ def get_matching_l2_filename(radiance_filename, l2_dir):
     :param radiance_filename: the filename for the radiance .hdf, demarcated with "MOD021KM".
     :param l2_dir: the root directory containing the l2 files.
     :return l2_filename: the path to the corresponding l2 file, demarcated with "MYD06_L2"
-    The radiance (MOD021KM) and geolocational (MYD06_L2) files share the same capture date (saved in the ilename itself), yet can have different processing dates (also seen within the filename). A regex search on a partial match in the same directory provides the second filename and path.
+    The radiance (MOD021KM) and level2 (MYD06_L2) files share the same capture date (saved in the ilename itself), yet can have different processing dates (also seen within the filename). A regex search on a partial match in the same directory provides the second filename and path.
     """
 
     # MYD021KM.A2008003.1855.061.2018031033116.hdf l1

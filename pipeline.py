@@ -74,18 +74,16 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lida
     if verbose:
         print("Cloud mask loaded")
 
-    # get cloudsat labels channel - time intensive
+    # get cloudsat alignment - time intensive
     t1 = time.time()
 
     try:
 
-        lm, *additional_info = src.cloudsat.get_cloudsat_mask(target_filepath, cloudsat_lidar_dir, cloudsat_dir, np_swath[-2], np_swath[-1])
-        np_swath = np.vstack([np_swath, l2_channels, cm[None, ], lm])
+        cs_range, mapping, layer_info = src.cloudsat.get_cloudsat_mask(target_filepath, cloudsat_lidar_dir, cloudsat_dir, np_swath[-2], np_swath[-1], map_labels=False)
 
     except Exception as e:
 
-        np_swath = np.vstack([np_swath, l2_channels, cm[None, ]])
-        print("file {} has no matching labelmask: {}".format(tail, e))
+        print("file {} has no matching cloudsat track: {}".format(tail, e))
 
     t2 = time.time()
 
@@ -93,7 +91,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lida
         print("Cloudsat alignment took {} s".format(t2 - t1))
 
     # cast swath values to float
-    np_swath = np_swath.astype(np.float16)
+    np_swath = np.vstack([np_swath, l2_channels, cm[None, ]]).astype(np.float16)
 
     # create the save path for the swath array, and save the array as a npy, with the same name as the input file.
     swath_savepath_str = os.path.join(save_subdir, tail.replace(".hdf", ".npy"))
@@ -110,7 +108,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lida
         if not os.path.exists(layer_info_savepath):
             os.makedirs(layer_info_savepath)
 
-        cs_dict = {"width-range": additional_info[0], "mapping": additional_info[1], "type-layer": additional_info[2], "base-layer": additional_info[3], "top-layer": additional_info[4], "type-quality": additional_info[5], "precip-flag": additional_info[6]}
+        layer_info.update({"width-range": cs_range, "mapping": mapping})
         
         if save:
             np.save(os.path.join(layer_info_savepath, tail.replace(".hdf", ".npy")), cs_dict)

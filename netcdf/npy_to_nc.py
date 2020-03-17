@@ -10,11 +10,11 @@ from src.utils import get_file_time_info, minutes_since
 swath_channels = ['ev_250_aggr1km_refsb_1', 'ev_250_aggr1km_refsb_2', 'ev_1km_emissive_29', 'ev_1km_emissive_33', 'ev_1km_emissive_34', 'ev_1km_emissive_35', 'ev_1km_emissive_36', 'ev_1km_refsb_26', 'ev_1km_emissive_27', 'ev_1km_emissive_20', 'ev_1km_emissive_21', 'ev_1km_emissive_22', 'ev_1km_emissive_23', 'latitude', 'longitude', 'cloud_water_path', 'cloud_optical_thickness', 'cloud_effective_radius', 'cloud_phase_optical_properties', 'cloud_top_pressure', 'cloud_top_height', 'cloud_top_temperature', 'cloud_emissivity', 'surface_temperature', 'cloud_mask']
 
 layer_info_channels = {
-    "type-layer" : 'cloud_layer_type', 
-    "base-layer" : 'cloud_layer_base',
-    "top-layer" : 'cloud_layer_top', 
-    "type-quality" : 'cloud_type_quality',
-    "precip-flag" : 'precipitation_flag',
+    "CloudLayerType" : 'cloud_layer_type', 
+    "CloudLayerBase" : 'cloud_layer_base',
+    "CloudLayerTop" : 'cloud_layer_top', 
+    "CloudTypeQuality" : 'cloud_type_quality',
+    "PrecipFlag" : 'precipitation_flag',
 }
 
 
@@ -92,7 +92,7 @@ def fill_dataset(dataset, variables, swath, layer_info, minutes, status="dayligh
         for info_name, channel in layer_info_channels.items():
 
             # map data to swath format
-            if info_name == "precip-flag":
+            if info_name == "PrecipFlag":
                 # precipitation flag is not available per layer
                 info = np.full(shape, variables[channel]._FillValue)
                 map_and_reduce(layer_info["mapping"], layer_info[info_name], info, layer_info["width-range"])
@@ -101,11 +101,15 @@ def fill_dataset(dataset, variables, swath, layer_info, minutes, status="dayligh
             else:
 
                 info = np.full((*shape, 10), variables[channel]._FillValue)
-                map_and_reduce(layer_info["mapping"], layer_info[info_name], info, layer_info["width-range"])
+                
+                # CloudTypeQuality cloud be None
+                if layer_info[info_name] is not None:
+                    map_and_reduce(layer_info["mapping"], layer_info[info_name], info, layer_info["width-range"])
+                
                 info = info.transpose(1, 0, 2)
 
                 # correct values, from [1, 8] to [0, 7]
-                if info_name == "type-layer":
+                if info_name == "CloudLayerType":
                     info -= 1
                     info[info < 0] = variables[channel]._FillValue
 
