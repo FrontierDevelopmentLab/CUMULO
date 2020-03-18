@@ -225,8 +225,8 @@ if __name__ == "__main__":
     # save swath as netcdf
     save_as_nc(np_swath, layer_info, swath_name, save_subdir)
 
-    # save visible channels as png for visualization purposes
-    extract_swath_rbg(myd02_filename, os.path.join(year, month, day), save_subdir, verbose=1)
+    # # save visible channels as png for visualization purposes
+    # extract_swath_rbg(myd02_filename, os.path.join(year, month, day), save_subdir, verbose=1)
 
     # # extract tiles for Machine Learning purposes
     # if np_swath.shape != (33, 2030, 1354):
