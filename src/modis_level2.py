@@ -22,11 +22,10 @@ def get_matching_l2_filename(radiance_filename, l2_dir):
     # MYD021KM.A2008003.1855.061.2018031033116.hdf l1
     # MYD06_L2.A2008003.1855.061.2018031060235.hdf l2
 
-    head, tail = os.path.split(radiance_filename)
+    tail = os.path.basename(radiance_filename)
     tail_parts = tail.split('.')
-    head_parts = head.split('/')
     
-    l2_filename = glob.glob(os.path.join(l2_dir, head_parts[-3], head_parts[-2], head_parts[-1], 'MYD06_L2.{}.{}.*.hdf'.format(tail_parts[1], tail_parts[2])))[0]
+    l2_filename = glob.glob(os.path.join(l2_dir, 'MYD06_L2.{}.{}.*.hdf'.format(tail_parts[1], tail_parts[2])))[0]
     return l2_filename
 
 def get_channels(l1_filename, l2_dir):
@@ -57,10 +56,9 @@ def get_cloud_mask(l1_filename, cloud_mask_dir):
     
     """ return a 2d mask, with cloudy pixels marked as 1, non-cloudy pixels marked as 0 """
     
-    head, tail = os.path.split(l1_filename)
-    head_parts = head.split("/")
+    basename = os.path.split(l1_filename)
 
-    cloud_mask_filename = glob.glob(os.path.join(cloud_mask_dir, head_parts[-3], head_parts[-2], head_parts[-1], '*' + l1_filename.split('.A')[1][:12] + '*'))[0]
+    cloud_mask_filename = glob.glob(os.path.join(cloud_mask_dir, 'MYD35*' + l1_filename.split('.A')[1][:12] + '*'))[0]
     
     # satpy returns(0=Cloudy, 1=Uncertain, 2=Probably Clear, 3=Confident Clear)
     swath = Scene(reader = 'modis_l2', filenames = [cloud_mask_filename])

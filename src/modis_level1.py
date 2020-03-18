@@ -38,9 +38,10 @@ def find_all_radiance_geoloc_pairs(path):
 
     return pairs
 
-def get_swath(radiance_filename):
+def get_swath(radiance_filename, myd03_dir):
     """
     :param radiance_filename: MYD02 filename
+    :param myd03_dir: root directory of MYD03 geolocational files
     :return swath: numpy.ndarray of size (15, 2030, 1350) 
     Uses the satpy Scene reader with the modis-l1b files. Issues reading files might be due to pyhdf not being
     installed - otherwise try pip install satpy[modis_0l1b]
@@ -52,7 +53,7 @@ def get_swath(radiance_filename):
     composite = ['1', '2', '29', '33', '34', '35', '36', '26', '27', '20', '21', '22', '23']
     
     # find a corresponding geolocational (MYD03) file for the provided radiance (MYD02) file
-    geoloc_filename = find_matching_geoloc_file(radiance_filename)
+    geoloc_filename = find_matching_geoloc_file(radiance_filename, myd03_dir)
 
     # load the global scene using satpy
     global_scene = Scene(reader='modis_l1b', filenames=[radiance_filename, geoloc_filename])
@@ -76,9 +77,10 @@ def get_swath(radiance_filename):
 
     return np.array(swath, dtype=np.float16)
 
-def get_swath_rgb(radiance_filename, composite='true_color'):
+def get_swath_rgb(radiance_filename, myd03_dir, composite='true_color'):
     """
     :param radiance_filename: MYD02 filename
+    :param myd03_dir: root directory of MYD03 geolocational files
     :return visible RGB channels: numpy.ndarray of size (3, 2030, 1354) 
     Uses the satpy Scene reader with the modis-l1b files. Issues reading files might be due to pyhdf not being
     installed - otherwise try pip install satpy[modis_0l1b]
@@ -86,7 +88,7 @@ def get_swath_rgb(radiance_filename, composite='true_color'):
     """
 
     # find a corresponding geolocational (MOD03) file for the provided radiance (MYD02) file
-    geoloc_filename = find_matching_geoloc_file(radiance_filename)
+    geoloc_filename = find_matching_geoloc_file(radiance_filename, myd03_dir)
 
     global_scene = Scene(reader='modis_l1b', filenames=[radiance_filename, geoloc_filename])
 

@@ -7,8 +7,8 @@ from pyhdf.SD import SD, SDC
 from pyhdf.HDF import HDF
 from pyhdf.VS import VS
 
-from track_alignment import get_track_oi, find_track_range, map_labels, scalable_align
-from utils import get_datetime, get_file_time_info
+from src.track_alignment import get_track_oi, find_track_range, map_labels, scalable_align
+from src.utils import get_datetime, get_file_time_info
 
 def find_cloudsat_by_day(abs_day, year, cloudsat_dir):
     """ returns list of filenames of specified day, and of previous and following day """
@@ -18,7 +18,7 @@ def find_cloudsat_by_day(abs_day, year, cloudsat_dir):
     for i in range(-1, 2):
 
         pattern = "{}{}{}*.hdf".format(year, "0" * (3 - len(str(abs_day + i))), abs_day + i)
-        cloudsat_filenames += glob.glob(os.path.join(cloudsat_dir, pattern))
+        cloudsat_filenames += glob.glob(os.path.join(cloudsat_dir, str(abs_day + i), pattern))
 
     return cloudsat_filenames
 
@@ -194,13 +194,21 @@ def get_cloudsat_mask(l1_filename, cloudsat_lidar_dir, cloudsat_dir, swath_latit
 
     # retrieve cloudsat files content
     if cloudsat_lidar_dir is None:
+
         cloudsat_filenames = find_matching_cloudsat_files(l1_filename, cloudsat_dir)
         precip_flag = get_precip_flag(cloudsat_filenames)
         # LayerTypeQuality not available in CS_2B-CLDCLASS_GRANULE_P1_R05_E02_F00 files
         layer_info = get_layer_information(cloudsat_filenames, get_quality=False) 
+
     else:
+
         cloudsat_filenames = find_matching_cloudsat_files(l1_filename, cloudsat_lidar_dir)
-        precip_flag = get_precip_flag(cloudsat_filenames, cloudsat_dir)
+
+        if cloudsat_dir is not None:
+            precip_flag = get_precip_flag(cloudsat_filenames, cloudsat_dir)
+        else:
+            precip_flag = None
+            
         layer_info = get_layer_information(cloudsat_filenames, get_quality=True) 
 
     layer_info['PrecipFlag'] = precip_flag

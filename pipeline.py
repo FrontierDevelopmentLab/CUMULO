@@ -24,7 +24,7 @@ def extract_full_swath(myd02_filename, myd03_dir, myd06_dir, myd35_dir, cloudsat
     Expects to find a corresponding MYD03 file in the same directory. Comments throughout
     """
 
-    _, tail = os.path.split(myd02_filename)
+    tail = os.path.basename(myd02_filename)
 
     # creating the save directories
     save_dir_daylight = os.path.join(save_dir, "daylight")
@@ -84,7 +84,7 @@ def extract_full_swath(myd02_filename, myd03_dir, myd06_dir, myd35_dir, cloudsat
 
     except Exception as e:
 
-        print("file {} has no matching cloudsat track: {}".format(tail, e))
+        print("Couldn't extract cloudsat track of {}: {}".format(tail, e))
 
     t2 = time.time()
 
@@ -164,9 +164,10 @@ def save_tiles_separately(tiles, swath_name, save_dir, tile_size=3):
         
         np.save(os.path.join(save_dir, "{}-{}.npy".format(swath_name.replace(".hdf", ""), i)), tile)
 
-def extract_swath_rbg(radiance_filepath, save_dir, verbose=1):
+def extract_swath_rbg(radiance_filepath, myd03_dir, save_dir, verbose=1):
     """
     :param radiance_filepath: the filepath of the radiance (MYD02) input file
+    :param myd03_dir: the root directory of geolocational (MYD03) files
     :param save_dir:
     :param verbose: verbosity switch: 0 - silent, 1 - verbose, 2 - partial, only prints confirmation at end
     :return: none
@@ -181,7 +182,7 @@ def extract_swath_rbg(radiance_filepath, save_dir, verbose=1):
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    visual_swath = src.modis_level1.get_swath_rgb(radiance_filepath)
+    visual_swath = src.modis_level1.get_swath_rgb(radiance_filepath, myd03_dir)
     
     #interpolate to remove NaN artefacts
     filled_ch_idx = src.interpolation.fill_all_channels(visual_swath)
@@ -208,13 +209,16 @@ if __name__ == "__main__":
     myd02_filename = sys.argv[2]
     save_dir = sys.argv[1]
     
-    root_dir = "data/"
+    root_dir, _ = os.path.split(myd02_filename)
+
+    year, month, day = root_dir.split("/")[-3:]
     # extract training channels, validation channels, cloud mask, class occurences if provided
     np_swath, layer_info, save_subdir, swath_name = extract_full_swath(myd02_filename,
-                                myd06_dir=root_dir,
-                                myd35_dir=root_dir,
+                                myd03_dir=os.path.join(year, month, day),
+                                myd06_dir=os.path.join(year, month, day),
+                                myd35_dir=os.path.join(year, month, day),
                                 cloudsat_lidar_dir=None,
-                                cloudsat_dir=root_dir,
+                                cloudsat_dir="data",
                                 save_dir=save_dir,
                                 verbose=1, save=False)
 
@@ -222,7 +226,7 @@ if __name__ == "__main__":
     save_as_nc(np_swath, layer_info, swath_name, save_subdir)
 
     # save visible channels as png for visualization purposes
-    extract_swath_rbg(myd02_filename, save_subdir, verbose=1)
+    extract_swath_rbg(myd02_filename, os.path.join(year, month, day), save_subdir, verbose=1)
 
     # # extract tiles for Machine Learning purposes
     # if np_swath.shape != (33, 2030, 1354):
