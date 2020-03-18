@@ -10,11 +10,12 @@ import src.modis_level1
 import src.modis_level2
 import src.tile_extraction
 
-def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lidar_dir, cloudsat_dir, save_dir, verbose=1, save=True):
+def extract_full_swath(myd02_filename, myd03_dir, myd06_dir, myd35_dir, cloudsat_lidar_dir, cloudsat_dir, save_dir, verbose=1, save=True):
     """
-    :param target_filepath: the filepath of the radiance (MYD02) input file
-    :param level2_dir: the root directory of l2 level files
-    :param cloudmask_dir: the root directory to cloud mask files
+    :param myd02_filename: the filepath of the radiance (MYD02) input file
+    :param myd03_dir: the root directory of geolocational (MYD03) files
+    :param myd06_dir: the root directory of level 2 files
+    :param myd35_dir: the root directory to cloud mask files
     :param cloudsat_lidar_dir: the root directory of cloudsat-lidar files
     :param cloudsat_dir: the root directory of cloudsat files
     :param save_dir:
@@ -23,7 +24,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lida
     Expects to find a corresponding MYD03 file in the same directory. Comments throughout
     """
 
-    _, tail = os.path.split(target_filepath)
+    _, tail = os.path.split(myd02_filename)
 
     # creating the save directories
     save_dir_daylight = os.path.join(save_dir, "daylight")
@@ -35,7 +36,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lida
             os.makedirs(dr)
 
     # pull a numpy array from the hdfs
-    np_swath = src.modis_level1.get_swath(target_filepath)
+    np_swath = src.modis_level1.get_swath(myd02_filename, myd03_dir)
 
     if verbose:
         print("swath {} loaded".format(tail))
@@ -63,13 +64,13 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lida
         save_subdir = save_dir_corrupt
 
     # pull L2 channels here
-    l2_channels = src.modis_level2.get_channels(target_filepath, level2_dir)
+    l2_channels = src.modis_level2.get_channels(myd02_filename, myd06_dir)
     
     if verbose:
         print("Level2 channels loaded")
 
     # pull cloud mask channel
-    cm = src.modis_level2.get_cloud_mask(target_filepath, cloudmask_dir)
+    cm = src.modis_level2.get_cloud_mask(myd02_filename, myd35_dir)
 
     if verbose:
         print("Cloud mask loaded")
@@ -79,7 +80,7 @@ def extract_full_swath(target_filepath, level2_dir, cloudmask_dir, cloudsat_lida
 
     try:
 
-        cs_range, mapping, layer_info = src.cloudsat.get_cloudsat_mask(target_filepath, cloudsat_lidar_dir, cloudsat_dir, np_swath[-2], np_swath[-1], map_labels=False)
+        cs_range, mapping, layer_info = src.cloudsat.get_cloudsat_mask(myd02_filename, cloudsat_lidar_dir, cloudsat_dir, np_swath[-2], np_swath[-1], map_labels=False)
 
     except Exception as e:
 
@@ -204,16 +205,16 @@ if __name__ == "__main__":
     import sys
     from netcdf.npy_to_nc import save_as_nc
     
-    target_filepath = sys.argv[2]
+    myd02_filename = sys.argv[2]
     save_dir = sys.argv[1]
     
-    root_dir = "/mnt/disks/disk1/"
+    root_dir = "data/"
     # extract training channels, validation channels, cloud mask, class occurences if provided
-    np_swath, layer_info, save_subdir, swath_name = extract_full_swath(target_filepath,
-                                level2_dir=root_dir+"aqua-data/level_2",
-                                cloudmask_dir=root_dir+"aqua-data/cloud_mask",
-                                cloudsat_lidar_dir=root_dir+"aqua-data/cloudsat_CC/",
-                                cloudsat_dir=root_dir+"aqua-data/cloudsat_CC/2008/",
+    np_swath, layer_info, save_subdir, swath_name = extract_full_swath(myd02_filename,
+                                myd06_dir=root_dir,
+                                myd35_dir=root_dir,
+                                cloudsat_lidar_dir=None,
+                                cloudsat_dir=root_dir,
                                 save_dir=save_dir,
                                 verbose=1, save=False)
 
@@ -221,7 +222,7 @@ if __name__ == "__main__":
     save_as_nc(np_swath, layer_info, swath_name, save_subdir)
 
     # save visible channels as png for visualization purposes
-    extract_swath_rbg(target_filepath, save_subdir, verbose=1)
+    extract_swath_rbg(myd02_filename, save_subdir, verbose=1)
 
     # # extract tiles for Machine Learning purposes
     # if np_swath.shape != (33, 2030, 1354):

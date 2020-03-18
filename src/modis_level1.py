@@ -6,16 +6,17 @@ from satpy import Scene
 
 MAX_WIDTH, MAX_HEIGHT = 1354, 2030
 
-def find_matching_geoloc_file(radiance_filename):
+def find_matching_geoloc_file(radiance_filename, myd03_dir):
     """
     :param radiance_filename: the filename for the radiance .hdf, demarcated with "MYD02".
+    :param myd03_dir: root directory of MYD03 geolocational files
     :return geoloc_filename: the path to the corresponding geolocational file, demarcated with "MYD03"
     The radiance (MYD02) geolocational (MYD03) files share the same capture date (saved in the filename itself), yet can have different processing dates (also seen within the filename). A regex search on a partial match in the same directory provides the second filename and path.
     """
 
-    head, tail = os.path.split(radiance_filename)
+    tail = os.path.basename(radiance_filename)
     identifier = tail.split('A')[1].split('.')[1]
-    geoloc_filename = glob.glob(os.path.join(head, '*D03*.{}.*.hdf'.format(identifier)))[0]
+    geoloc_filename = glob.glob(os.path.join(myd03_dir, '*D03*.{}.*.hdf'.format(identifier)))[0]
 
     return geoloc_filename
 
