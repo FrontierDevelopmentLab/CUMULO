@@ -112,13 +112,13 @@ def extract_full_swath(myd02_filename, myd03_dir, myd06_dir, myd35_dir, cloudsat
         layer_info.update({"width-range": cs_range, "mapping": mapping})
         
         if save:
-            np.save(os.path.join(layer_info_savepath, tail.replace(".hdf", ".npy")), cs_dict)
+            np.save(os.path.join(layer_info_savepath, tail.replace(".hdf", ".npy")), layer_info)
 
     except:
         
-        cs_dict = None
+        layer_info = None
 
-    return np_swath, cs_dict, save_subdir, tail
+    return np_swath, layer_info, save_subdir, tail
 
 def extract_tiles_from_swath(np_swath, swath_name, save_dir, tile_size=3, stride=3, verbose=1):
     # sample the swath for a selection of tiles and its associated metadata
@@ -209,18 +209,19 @@ if __name__ == "__main__":
     myd02_filename = sys.argv[2]
     save_dir = sys.argv[1]
     
-    root_dir, _ = os.path.split(myd02_filename)
+    root_dir, filename = os.path.split(myd02_filename)
 
     year, month, day = root_dir.split("/")[-3:]
+    abs_day = filename[14:17]
+
+    myd03_dir = os.path.join("MODIS", "MYD03", year, month, day)
+    myd06_dir = os.path.join("MODIS", "MYD06", year, month, day)
+    myd35_dir = os.path.join("MODIS", "MYD35", year, month, day)
+    cloudsat_lidar_dir = None
+    cloudsat_dir = os.path.join("Cloudsat", "0" * (3 - len(abs_day)) + abs_day)
+
     # extract training channels, validation channels, cloud mask, class occurences if provided
-    np_swath, layer_info, save_subdir, swath_name = extract_full_swath(myd02_filename,
-                                myd03_dir=os.path.join(year, month, day),
-                                myd06_dir=os.path.join(year, month, day),
-                                myd35_dir=os.path.join(year, month, day),
-                                cloudsat_lidar_dir=None,
-                                cloudsat_dir="data",
-                                save_dir=save_dir,
-                                verbose=1, save=False)
+    np_swath, layer_info, save_subdir, swath_name = extract_full_swath(myd02_filename, myd03_dir, myd06_dir, myd35_dir, cloudsat_lidar_dir, cloudsat_dir, save_dir=save_dir, verbose=0, save=False)
 
     # save swath as netcdf
     save_as_nc(np_swath, layer_info, swath_name, save_subdir)

@@ -18,7 +18,7 @@ def find_cloudsat_by_day(abs_day, year, cloudsat_dir):
     for i in range(-1, 2):
 
         pattern = "{}{}{}*.hdf".format(year, "0" * (3 - len(str(abs_day + i))), abs_day + i)
-        cloudsat_filenames += glob.glob(os.path.join(cloudsat_dir, str(abs_day + i), pattern))
+        cloudsat_filenames += glob.glob(os.path.join(cloudsat_dir, pattern))
 
     return cloudsat_filenames
 
@@ -75,7 +75,7 @@ def get_precip_flag(cloudsat_filenames, cloudsat_dir=None, verbose=0):
         # if precipitation information is stored in another file
         if cloudsat_dir is not None:
             basename = os.path.basename(cloudsat_path)
-            filename = glob.glob(os.path.join(cloudsat_dir, basename[4:7], basename[:11] + "*.hdf"))[0]
+            filename = glob.glob(os.path.join(cloudsat_dir, basename[:11] + "*.hdf"))[0]
         else:
             filename = cloudsat_path
         
@@ -163,9 +163,9 @@ def get_layer_information(cloudsat_filenames, get_quality=True, verbose=0):
         value = np.vstack(value)
 
         if key == 'CloudLayerType':
-            value = value.astype(np.int8)
+            all_info[key] = value.astype(np.int8)
         else:
-            value = value.astype(np.float16)
+            all_info[key] = value.astype(np.float16)
 
     if not get_quality:
         all_info['CloudTypeQuality'] = None
@@ -224,10 +224,10 @@ def get_cloudsat_mask(l1_filename, cloudsat_lidar_dir, cloudsat_dir, swath_latit
 
     mapping = scalable_align(cs_latitudes, cs_longitudes, lat, lon)
 
-    for _, value in layer_info:
+    for key, value in layer_info.items():
         
         if value is not None:
-            value = value[toi_indices]
+            layer_info[key] = value[toi_indices]
 
     if map_labels:
         class_counts = get_class_occurrences(layer_type)
