@@ -104,14 +104,16 @@ def extract_full_swath(myd02_filename, myd03_dir, myd06_dir, myd35_dir, cloudsat
             print("swath saved as {}".format(swath_savepath_str))
     
     try:
-        layer_info_savepath = os.path.join(save_subdir, "layer-info")
-    
-        if not os.path.exists(layer_info_savepath):
-            os.makedirs(layer_info_savepath)
 
         layer_info.update({"width-range": cs_range, "mapping": mapping})
         
         if save:
+
+            layer_info_savepath = os.path.join(save_subdir, "layer-info")
+    
+            if not os.path.exists(layer_info_savepath):
+                os.makedirs(layer_info_savepath)
+            
             np.save(os.path.join(layer_info_savepath, tail.replace(".hdf", ".npy")), layer_info)
 
     except:
