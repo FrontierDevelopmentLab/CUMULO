@@ -5,7 +5,7 @@ import sys
 import netCDF4 as nc4
 
 from src.track_alignment import map_and_reduce
-from src.utils import get_file_time_info, minutes_since    
+from src.utils import get_datetime, get_file_time_info, minutes_since    
 
 swath_channels = ['ev_250_aggr1km_refsb_1', 'ev_250_aggr1km_refsb_2', 'ev_1km_emissive_29', 'ev_1km_emissive_33', 'ev_1km_emissive_34', 'ev_1km_emissive_35', 'ev_1km_emissive_36', 'ev_1km_refsb_26', 'ev_1km_emissive_27', 'ev_1km_emissive_20', 'ev_1km_emissive_21', 'ev_1km_emissive_22', 'ev_1km_emissive_23', 'latitude', 'longitude', 'cloud_water_path', 'cloud_optical_thickness', 'cloud_effective_radius', 'cloud_phase_optical_properties', 'cloud_top_pressure', 'cloud_top_height', 'cloud_top_temperature', 'cloud_emissivity', 'surface_temperature', 'cloud_mask']
 
@@ -159,14 +159,7 @@ if __name__ == "__main__":
 
     # get time info
     year, abs_day, hour, minute = get_file_time_info(swath_path)
-
-    # create save directory
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-
-    #create a copy of reference dataset
-    copy_name = "A{}.{}.{}{}.nc".format(year, abs_day, hour, minute)
-    copy, variables = copy_dataset_structure(os.path.join("netcdf", "cumulo.nc"), os.path.join(save_dir, copy_name))
+    month = get_datetime(year, int(abs_day)).month
 
     # determine swath status from directory hierarchy
     status = "corrupt"
@@ -174,6 +167,14 @@ if __name__ == "__main__":
         status = "daylight"
     elif "night" in swath_path:
         status = "night"
+
+    # create save directory
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    #create a copy of reference dataset
+    copy_name = "A{}.{}.{}{}.nc".format(year, abs_day, hour, minute)
+    copy, variables = copy_dataset_structure(os.path.join("netcdf", "cumulo.nc"), os.path.join(save_dir, month, status, copy_name))
 
     # convert npy to nc
     minutes_since_2008 = minutes_since(int(year), int(abs_day), int(hour), int(minute))

@@ -36,11 +36,16 @@ def compress_dataset(original_filename, copy_filename):
 
 if __name__ == "__main__":
 
-    swath_path = sys.argv[1]
-
-    copy_name = swath_path.replace(".nc", "-compressed.nc")
+    swath_path = sys.argv[2]
+    save_path = sys.argv[1]
+    
+    copy_name = os.path.join(save_path, "/".join(swath_path.split("/")[-4:]))
+    
+    dir_name = os.path.dirname(copy_name)
+        
+    try:
+        os.makedirs(dir_name)
+    except:
+        pass
+    
     compress_dataset(swath_path, copy_name)
-
-    # remove original file
-    os.remove(swath_path)
-    os.rename(copy_name, swath_path)
