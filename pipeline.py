@@ -206,27 +206,38 @@ def extract_swath_rbg(radiance_filepath, myd03_dir, save_dir, verbose=1):
 if __name__ == "__main__":
 
     import sys
+
+    from pathlib import Path
+
     from netcdf.npy_to_nc import save_as_nc
+    from src.utils import get_file_time_info
     
     myd02_filename = sys.argv[2]
     save_dir = sys.argv[1]
     
     root_dir, filename = os.path.split(myd02_filename)
 
-    year, month, day = root_dir.split("/")[-3:]
-    abs_day = filename[14:17]
+    month, day = root_dir.split("/")[-2:]
+
+    # get time info
+    year, abs_day, hour, minute = get_file_time_info(myd02_filename)
+    save_name = "A{}.{}.{}{}.nc".format(year, abs_day, hour, minute)
+
+    # recursvely check if file exist in save_dir
+    for _ in Path(save_dir).rglob(save_name):
+        raise FileExistsError("{} already exist. Not extracting it again.".format(save_name))
 
     myd03_dir = os.path.join("MODIS", "MYD03", year, month, day)
     myd06_dir = os.path.join("MODIS", "MYD06", year, month, day)
     myd35_dir = os.path.join("MODIS", "MYD35", year, month, day)
     cloudsat_lidar_dir = None
-    cloudsat_dir = os.path.join("Cloudsat", "0" * (3 - len(abs_day)) + abs_day)
+    cloudsat_dir = os.path.join("Cloudsat", abs_day)
 
     # extract training channels, validation channels, cloud mask, class occurences if provided
     np_swath, layer_info, save_subdir, swath_name = extract_full_swath(myd02_filename, myd03_dir, myd06_dir, myd35_dir, cloudsat_lidar_dir, cloudsat_dir, save_dir=save_dir, verbose=0, save=False)
 
     # save swath as netcdf
-    save_as_nc(np_swath, layer_info, swath_name, save_subdir)
+    save_as_nc(np_swath, layer_info, swath_name, os.path.join(save_subdir, save_name))
 
     # # save visible channels as png for visualization purposes
     # extract_swath_rbg(myd02_filename, os.path.join(year, month, day), save_subdir, verbose=1)
