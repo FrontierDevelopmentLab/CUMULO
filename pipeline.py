@@ -216,11 +216,12 @@ if __name__ == "__main__":
     year, month, day = root_dir.split("/")[-3:]
     abs_day = filename[14:17]
 
-    myd03_dir = os.path.join("MODIS", "MYD03", year, month, day)
-    myd06_dir = os.path.join("MODIS", "MYD06", year, month, day)
-    myd35_dir = os.path.join("MODIS", "MYD35", year, month, day)
+    root_dir = "/mnt/modisaqua/2016/"
+    myd03_dir = os.path.join(root_dir, "MODIS", "data", "MYD03", "collection61", year, month, day)
+    myd06_dir = os.path.join(root_dir, "MODIS", "data", "MYD06_L2", "collection61", year, month, day)
+    myd35_dir = os.path.join(root_dir, "MODIS", "data", "MYD35_L2", "collection61", year, month, day)
     cloudsat_lidar_dir = None
-    cloudsat_dir = os.path.join("Cloudsat", "0" * (3 - len(abs_day)) + abs_day)
+    cloudsat_dir = os.path.join(root_dir, "CloudSat")
 
     # extract training channels, validation channels, cloud mask, class occurences if provided
     np_swath, layer_info, save_subdir, swath_name = extract_full_swath(myd02_filename, myd03_dir, myd06_dir, myd35_dir, cloudsat_lidar_dir, cloudsat_dir, save_dir=save_dir, verbose=0, save=False)
