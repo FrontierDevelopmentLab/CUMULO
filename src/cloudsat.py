@@ -16,8 +16,10 @@ def find_cloudsat_by_day(abs_day, year, cloudsat_dir):
     cloudsat_filenames = []
 
     for i in range(-1, 2):
+        
+        cur_day = abs_day + i
 
-        pattern = "{}{}{}*.hdf".format(year, "0" * (3 - len(str(abs_day + i))), abs_day + i)
+        pattern = "{}{}/{}{}{}*.hdf".format("0" * (3 - len(str(cur_day))), cur_day, year, "0" * (3 - len(str(cur_day))), cur_day)
         cloudsat_filenames += glob.glob(os.path.join(cloudsat_dir, pattern))
 
     return cloudsat_filenames
