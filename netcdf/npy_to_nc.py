@@ -139,12 +139,13 @@ def save_as_nc(swath, layer_info, swath_path, save_name):
 
     # determine swath status from directory hierarchy
     status = "corrupt"
-    if "daylight" in save_dir:
+    if "daylight" in save_name:
         status = "daylight"
-    elif "night" in save_dir:
+    elif "night" in save_name:
         status = "night"
 
     # convert npy to nc
+    year, abs_day, hour, minute = get_file_time_info(swath_path)
     minutes_since_2008 = minutes_since(int(year), int(abs_day), int(hour), int(minute))
     fill_dataset(copy, variables, swath, layer_info, minutes_since_2008, status)
 

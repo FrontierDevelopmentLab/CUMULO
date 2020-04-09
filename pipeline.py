@@ -227,7 +227,7 @@ if __name__ == "__main__":
     for _ in Path(save_dir).rglob(save_name):
         raise FileExistsError("{} already exist. Not extracting it again.".format(save_name))
 
-    root_dir = "/mnt/modisaqua/2016/"
+    root_dir = "/mnt/modisaqua/{}/".format(year)
     myd03_dir = os.path.join(root_dir, "MODIS", "data", "MYD03", "collection61", year, month, day)
     myd06_dir = os.path.join(root_dir, "MODIS", "data", "MYD06_L2", "collection61", year, month, day)
     myd35_dir = os.path.join(root_dir, "MODIS", "data", "MYD35_L2", "collection61", year, month, day)
