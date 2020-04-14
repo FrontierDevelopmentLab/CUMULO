@@ -42,7 +42,7 @@ def get_swath(radiance_filename, myd03_dir):
     """
     :param radiance_filename: MYD02 filename
     :param myd03_dir: root directory of MYD03 geolocational files
-    :return swath: numpy.ndarray of size (15, 2030, 1350) 
+    :return swath: numpy.ndarray of size (15, HEIGHT, WIDTH) 
     Uses the satpy Scene reader with the modis-l1b files. Issues reading files might be due to pyhdf not being
     installed - otherwise try pip install satpy[modis_0l1b]
     Creates a scene with the MYD02 and MYD03 files, and extracts them as multi-channel arrays. The lat and long are

@@ -30,7 +30,7 @@ def get_matching_l2_filename(radiance_filename, l2_dir):
 
 def get_channels(l1_filename, l2_dir):
 
-    """ take in the level 1 filename and rootdir for the level 2 data, returns an np.array of size (10, 2030, 1354) with all l2 channels"""
+    """ take in the level 1 filename and rootdir for the level 2 data, returns an np.array of size (10, HEIGHT, WIDTH) with all l2 channels"""
 
     filename = get_matching_l2_filename(l1_filename, l2_dir)
 
