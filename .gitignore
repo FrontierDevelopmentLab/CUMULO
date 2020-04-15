@@ -3,5 +3,4 @@ notebooks/\.ipynb_checkpoints/
 *.npy
 DATA/
 __pycache__/
-docs/
 *pycache*/
