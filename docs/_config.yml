@@ -1,4 +1,4 @@
 theme: jekyll-theme-minimal
 description: a benchmark dataset for training and evaluating global cloud classification models
 
-logo: https://github.com/FrontierDevelopmentLab/CUMULO/blob/master/docs/images/logo.png
+logo: "docs/images/logo.png"
