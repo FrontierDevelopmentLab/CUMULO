@@ -22,7 +22,7 @@ It contains over 100k annotated multispectral images at 1km x 1km resolution, pr
 
 ### File Format
 
-Data is stored in **Network Common Data Form (NetCDF)** following this [convention])http://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/cf-conventions.html).
+Data is stored in **Network Common Data Form (NetCDF)** following this [convention](http://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/cf-conventions.html).
 
 There is 1 NetCDF file per swath of 1354x2030 pixels, 1 every 5 minutes, with filename:
 
@@ -37,7 +37,7 @@ MM => minutes
 
 ### File Content
 
-To get an overview of CUMULO's variables and their descriptions, run
+To see the variables available for a netcdf file _AYYYYDDD.HHMM.nc_ and their description, run: 
 
 ```bash
 ncdump -h netcdf/cumulo.nc
