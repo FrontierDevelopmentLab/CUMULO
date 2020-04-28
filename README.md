@@ -6,12 +6,12 @@ the [Moderate Resolution Imaging Spectroradiometer (MODIS) from Aqua satellite](
 
 [FULL README](https://www.dropbox.com/sh/6gca7f0mb3b0ikz/AAAeTWF21WGZ7-y9MpSiL9P3a/CUMULO?dl=0&preview=README.pdf&subfolder_nav_tracking=1)
 
-## Dataset
+# Dataset
 
 The dataset is hosted [here](https://www.dropbox.com/sh/6gca7f0mb3b0ikz/AADq2lk4u7k961Qa31FwIDEpa?dl=0).
-It contains over 100k annotated multispectral images at 1km x 1km resolution, providing daily coverage of the Earth for 2008. Years 2009 and 2016 are coming soon.
+It contains over 100k annotated multispectral images at 1km x 1km resolution, providing daily full coverage of the Earth for 2008. Years 2009 and 2016 are coming soon.
 
-### Download
+## Download
 
 #### Option 1: syncing with your DropBox Account
 1. add [CUMULO](https://www.dropbox.com/sh/6gca7f0mb3b0ikz/AADq2lk4u7k961Qa31FwIDEpa?dl=0) to your DropBox account
@@ -20,6 +20,20 @@ It contains over 100k annotated multispectral images at 1km x 1km resolution, pr
 #### Option 2: direct download
 1. use one these download [scripts](https://www.dropbox.com/sh/6gca7f0mb3b0ikz/AACJu8tYZpREqL704LZ2XVQ9a/CUMULO/download-scripts?dl=0&subfolder_nav_tracking=1)
 
+### File Format
+
+Data is stored in **Network Common Data Form (NetCDF)** following this [convention])http://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/cf-conventions.html).
+
+There is 1 NetCDF file per swath of 1354x2030 pixels, 1 every 5 minutes, with filename:
+
+```
+filename = AYYYYDDD.HHMM.nc
+
+YYYY => year
+DDD => absolute day since 01.01.2008 
+HH => hour of day
+MM => minutes    
+```
 
 ### File Content
 
