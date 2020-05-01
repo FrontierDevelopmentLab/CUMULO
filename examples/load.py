@@ -6,13 +6,13 @@ import netCDF4 as nc4
 
 from torch.utils.data import Dataset
 
-# ------------------------------------------------------------ CUMULO HELPERS
-
 radiances = ['ev_250_aggr1km_refsb_1', 'ev_250_aggr1km_refsb_2', 'ev_1km_emissive_29', 'ev_1km_emissive_33', 'ev_1km_emissive_34', 'ev_1km_emissive_35', 'ev_1km_emissive_36', 'ev_1km_refsb_26', 'ev_1km_emissive_27', 'ev_1km_emissive_20', 'ev_1km_emissive_21', 'ev_1km_emissive_22', 'ev_1km_emissive_23']
 coordinates = ['latitude', 'longitude']
 properties = ['cloud_water_path', 'cloud_optical_thickness', 'cloud_effective_radius', 'cloud_phase_optical_properties', 'cloud_top_pressure', 'cloud_top_height', 'cloud_top_temperature', 'cloud_emissivity', 'surface_temperature']
 rois = 'cloud_mask'
 labels = 'cloud_layer_type'
+
+# ------------------------------------------------------------ CUMULO HELPERS
 
 class CumuloDataset(Dataset):
 
@@ -61,12 +61,12 @@ class Normalizer(object):
 
         return (instance - self.mean) / self.std
 
-def get_most_frequent_label(labelmask, dim=0):
+def get_most_frequent_label(labelmask, axis=0):
 
-    labels = np.argmax(labelmask, dim).astype(float)
+    labels = np.argmax(labelmask, axis).astype(float)
 
     # set label of pixels with no occurences of clouds to NaN
-    labels[np.sum(labelmask, dim) == 0] = np.NaN
+    labels[np.sum(labelmask, axis) == 0] = np.NaN
 
     return labels
 

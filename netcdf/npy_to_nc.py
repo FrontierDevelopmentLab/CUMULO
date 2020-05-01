@@ -17,7 +17,6 @@ layer_info_channels = {
     "PrecipFlag" : 'precipitation_flag',
 }
 
-
 channel_params = { # offset, scale_factor, min_value, max_value
     'cloud_water_path' : [0., 1., 0, 10000], 
     'cloud_optical_thickness' : [0., 0.00999999977648258, 0, 10000], 
