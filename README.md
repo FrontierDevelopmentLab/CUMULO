@@ -24,7 +24,7 @@ It contains over 100k annotated multispectral images at 1km x 1km resolution, pr
 
 Data is stored in **Network Common Data Form (NetCDF)** following this [convention](http://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/cf-conventions.html).
 
-There is 1 NetCDF file per swath of 1354x2030 pixels, 1 every 5 minutes, with filename:
+There is 1 NetCDF file per swath of 1354x2030 pixels, 1 every 5 minutes, named:
 
 ```
 filename = AYYYYDDD.HHMM.nc
@@ -45,6 +45,14 @@ ncdump -h netcdf/cumulo.nc
 
 ## Code Source
 
+1. The script [pipeline.py](pipeline.py) extracts one CUMULO's swath (as a netcdf file) from the corresponding MODIS' myd02, myd03, myd06, myd35 and CS_2B-CLDCLASS and/or CS_2B-CLDCLASS-LIDAR files.
+
+``` python
+python3 pipeline <save-dir> <myd02-filename>
+```
+
+2. [src/](src/) contains the code source for extracting the different CUMULO's features, for alignment them and for completing the missing values when possible.
+
 ### Dependencies
 
 ```bash
@@ -54,11 +62,6 @@ pip install satpy
 pip install satpy[modis_l1b]
 pip install -r requirements.txt
 ```
-
-## Acknowledgments
-
-This work is the result of the 2019 ESA [Frontier Development Lab](https://fdleurope.org/) Atmospheric Phenomena and Climate Variability challenge. 
-We are grateful to all organisers, mentors and sponsors for providing us this opportunity. We thank Google Cloud for providing computing and storage resources to complete this work.
 
 ## Cite
 If you find this work useful, please cite the [original paper](https://arxiv.org/abs/1911.04227):
@@ -70,3 +73,8 @@ If you find this work useful, please cite the [original paper](https://arxiv.org
         journal={arXiv preprint arXiv:1911.04227},
         year={2019}}
 ```
+
+## Acknowledgments
+
+This work is the result of the 2019 ESA [Frontier Development Lab](https://fdleurope.org/) Atmospheric Phenomena and Climate Variability challenge. 
+We are grateful to all organisers, mentors and sponsors for providing us this opportunity. We thank Google Cloud for providing computing and storage resources to complete this work.
