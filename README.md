@@ -37,7 +37,7 @@ MM => minutes
 
 ### File Content
 
-To see the variables available for a netcdf file _AYYYYDDD.HHMM.nc_ and their description, run: 
+To see the variables available for a netcdf file and their description, run: 
 
 ```bash
 ncdump -h netcdf/cumulo.nc
@@ -47,7 +47,7 @@ ncdump -h netcdf/cumulo.nc
 
 1. The script [pipeline.py](pipeline.py) extracts one CUMULO's swath (as a netcdf file) from the corresponding MODIS' MYD02, MYD03, MYD06 and MYD35 files, and CloudSat's CS_2B-CLDCLASS and/or CS_2B-CLDCLASS-LIDAR files.
 
-``` python
+```python
 python3 pipeline <save-dir> <myd02-filename>
 ```
 
