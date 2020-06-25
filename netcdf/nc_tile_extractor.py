@@ -93,7 +93,7 @@ def sample_cloudy_unlabelled_tiles(swath_tuple, cloud_mask, label_mask, number_o
     # compute distances from tile center of tile upper left and lower right corners
     offset, offset_2 = get_tile_offsets(tile_size)
 
-    positions, tiles = [], []
+    positions, tiles = [], [[] for _ in swath_tuple]
     for center in tile_centers:
         center_w, center_h = center
 
@@ -102,14 +102,15 @@ def sample_cloudy_unlabelled_tiles(swath_tuple, cloud_mask, label_mask, number_o
         h1 = center_h - offset
         h2 = center_h + offset_2 + 1
 
-        tile = [a[:, w1:w2, h1:h2] for a in swath_tuple]
         tile_position = ((w1, w2), (h1, h2))
 
-        positions.append(tile_position)        
-        tiles.append(tile)
+        positions.append(tile_position)   
+        for i, a in enumerate(swath_tuple):     
+            tiles[i].append(a[:, w1:w2, h1:h2])
 
-    tiles = np.stack(tiles)
     positions = np.stack(positions)
+    for i, t in enumerate(tiles):     
+        tiles[i] = np.stack(t)
 
     return tiles, positions
 
@@ -134,7 +135,7 @@ def extract_cloudy_labelled_tiles(swath_tuple, cloud_mask, label_mask, tile_size
 
     offset, offset_2 = get_tile_offsets(tile_size)
 
-    positions, tiles = [], []
+    positions, tiles = [], [[] for _ in swath_tuple]
     for center in labelled_pixels_idx:
         center_w, center_h = center
 
@@ -143,14 +144,15 @@ def extract_cloudy_labelled_tiles(swath_tuple, cloud_mask, label_mask, tile_size
         h1 = center_h - offset
         h2 = center_h + offset_2 + 1
 
-        tile = [a[:, w1:w2, h1:h2] for a in swath_tuple]
         tile_position = ((w1, w2), (h1, h2))
 
-        positions.append(tile_position)        
-        tiles.append(tile)
+        positions.append(tile_position)   
+        for i, a in enumerate(swath_tuple):     
+            tiles[i].append(a[:, w1:w2, h1:h2])
 
-    tiles = np.stack(tiles)
     positions = np.stack(positions)
+    for i, t in enumerate(tiles):     
+        tiles[i] = np.stack(t)
 
     return tiles, positions
 
@@ -166,7 +168,7 @@ def sample_labelled_and_unlabelled_tiles(swath_tuple, cloud_mask, label_mask, ti
         
     labelled_tiles, labelled_positions = extract_cloudy_labelled_tiles(swath_tuple, cloud_mask, label_mask, tile_size)
 
-    number_of_labels = len(labelled_tiles)
+    number_of_labels = len(labelled_tiles[0])
 
     unlabelled_tiles, unlabelled_positions = sample_cloudy_unlabelled_tiles(swath_tuple, cloud_mask, label_mask, number_of_labels, tile_size)
 
@@ -201,12 +203,8 @@ if __name__ == "__main__":
 
         name = os.path.basename(filename).replace(".nc", "")
 
-        for i, (tile, loc) in enumerate(zip(labelled_tiles, labelled_positions)):
+        save_name = os.path.join(save_dir, "label", name)
+        np.savez_compressed(save_name, radiances=labelled_tiles[0].data, properties=labelled_tiles[1].data, cloud_mask=labelled_tiles[2].data, labels=labelled_tiles[3].data, location=labelled_positions)
 
-            save_name = os.path.join(save_dir, "label", "{}.{}".format(name, i))
-            np.savez_compressed(save_name, radiances=tile[0].data, properties=tile[1].data, cloud_mask=tile[2].data, labels=tile[3].data, location=loc)
-
-        for i, (tile, loc) in enumerate(zip(unlabelled_tiles, unlabelled_positions)):
-
-            save_name = os.path.join(save_dir, "unlabel", "{}.{}".format(name, i))
-            np.savez_compressed(save_name, radiances=tile[0].data, properties=tile[1].data, cloud_mask=tile[2].data, labels=tile[3].data, location=loc)
+        save_name = os.path.join(save_dir, "unlabel", name)
+        np.savez_compressed(save_name, radiances=unlabelled_tiles[0].data, properties=unlabelled_tiles[1].data, cloud_mask=unlabelled_tiles[2].data, labels=unlabelled_tiles[3].data, location=unlabelled_positions)

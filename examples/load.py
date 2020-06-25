@@ -122,6 +122,7 @@ class Normalizer(object):
 
 if __name__ == "__main__":  
 
+    # try loading precomputed 3x3 tiles
     load_path = "../DATA/npz/label/"
 
     dataset = CumuloDataset(load_path, ext="npz")
