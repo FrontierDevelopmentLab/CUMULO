@@ -36,7 +36,7 @@ def get_label_mask(labels):
 
     label_mask = np.sum(~labels.mask, 3) > 0
 
-    return label_mask.astype(np.bool) 
+    return label_mask 
 
 def get_unlabel_mask(label_mask, tile_size=3):
     """returns inverse of label mask, with all pixels around a labelled one eroded."""
