@@ -79,7 +79,7 @@ class CumuloDataset(Dataset):
         self.file_paths = glob.glob(os.path.join(root_dir, "*." + ext))
 
         if len(self.file_paths) == 0:
-            raise FileNotFoundError("no", ext, " files in", self.root_dir)
+            raise FileNotFoundError("no {} files in {}".format(ext, root_dir))
 
         self.normalizer = normalizer
         self.label_preproc = label_preproc
