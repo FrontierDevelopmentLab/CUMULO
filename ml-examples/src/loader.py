@@ -68,7 +68,7 @@ def read_npz(npz_file):
 
 class CumuloDataset(Dataset):
 
-    def __init__(self, root_dir, ext="nc", label_preproc=get_most_frequent_label, normalizer=None):
+    def __init__(self, root_dir, ext="npz", label_preproc=get_most_frequent_label, normalizer=None, tiler=None):
         
         self.root_dir = root_dir
         self.ext = ext
@@ -83,6 +83,7 @@ class CumuloDataset(Dataset):
 
         self.normalizer = normalizer
         self.label_preproc = label_preproc
+        self.tiler = tiler
 
     def __len__(self):
 
@@ -104,21 +105,16 @@ class CumuloDataset(Dataset):
         if self.label_preproc is not None:
             labels = self.label_preproc(labels)
 
-        return filename, radiances, properties, rois, labels
+        if self.tiler is not None:
+            tiles, locations = self.tiler(radiances)
+
+            return filename, radiances, locations, properties, rois, labels
+
+        else:
+            return filename, radiances, properties, rois, labels
 
     def __str__(self):
         return 'CUMULO'
-
-class Normalizer(object):
-
-    def __init__(self, mean, std):
-
-        self.mean = mean
-        self.std = std
-
-    def __call__(self, instance):
-
-        return (instance - self.mean) / self.std
 
 if __name__ == "__main__":  
 
