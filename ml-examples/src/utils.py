@@ -11,6 +11,8 @@ from skimage.util import crop
 import torch
 from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler
 
+from src.loader import read_npz
+
 def get_hms(seconds):
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
@@ -20,9 +22,9 @@ def make_directory(dir_path):
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
-def get_dataset_statistics(dataset, nb_classes, use_cuda=True):
+def get_dataset_statistics(dataset, nb_classes, batch_size, collate, use_cuda=True, tile_size=9):
 
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False, num_workers=8)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=8, collate_fn=collate)
     weights = np.zeros(nb_classes)
     sum_x = torch.zeros(13)
     std = torch.zeros(1, 13, 1, 1)
@@ -32,9 +34,7 @@ def get_dataset_statistics(dataset, nb_classes, use_cuda=True):
         std = std.cuda()
     
     nb_tiles = 0
-    for x in dataloader:
-
-        labels, tiles = x["labels"], x["tiles"].float()
+    for tiles, labels in dataloader:
         
         nb_tiles += len(tiles)
 
@@ -46,13 +46,11 @@ def get_dataset_statistics(dataset, nb_classes, use_cuda=True):
         
         sum_x += torch.sum(tiles, (0, 2, 3))
     
-    nb_pixels = nb_tiles * 9
+    nb_pixels = nb_tiles * tile_size
     m = (sum_x / nb_pixels).reshape(1, 13, 1, 1)
     
-    for x in dataloader:
+    for tiles, _ in dataloader:
         
-        tiles = x["tiles"].float()
-
         if use_cuda:
             tiles = tiles.cuda()
 
@@ -114,18 +112,17 @@ class TileExtractor(object):
 
 # ------------------------------------------------------------ CUMULO HELPERS
 
-def get_tile_sampler(dataset, allowed_idx=None):
+def get_tile_sampler(dataset, allowed_idx=None, ext="npz"):
 
     indices = []
-    paths = dataset.swath_paths.copy()
+    paths = dataset.file_paths.copy()
 
     if allowed_idx is not None:
         paths = [paths[i] for i in allowed_idx]
     
-    for i, swath_name in enumerate(paths):
+    for i, swath_path in enumerate(paths):
 
-        swath_path = os.path.join(dataset.root_dir, swath_name)
-        swath = np.load(swath_path)
+        swath, *_ = read_npz(swath_path)
         
         indices += [(i, j) for j in range(swath.shape[0])]
 
@@ -133,7 +130,7 @@ def get_tile_sampler(dataset, allowed_idx=None):
 
 def tile_collate(swath_tiles):
     
-    data = np.vstack([s["tiles"] for s in swath_tiles])
-    target = np.hstack([s["labels"] for s in swath_tiles])
+    data = np.vstack([tiles for _, tiles, _, _, _ in swath_tiles])
+    target = np.hstack([labels for *_, labels in swath_tiles])
 
-    return {"tiles": torch.from_numpy(data), "labels": torch.from_numpy(target)}
+    return torch.from_numpy(data).float(), torch.from_numpy(target).long()

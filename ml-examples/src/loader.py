@@ -46,7 +46,7 @@ def get_most_frequent_label(labels):
     # set label of pixels with no occurences of clouds to NaN
     labels[np.sum(label_occurrences, 1) == 0] = np.NaN
 
-    return labels
+    return labels.squeeze()
 
 def read_nc(nc_file):
     """return masked arrays, with masks indicating the invalid values"""
@@ -68,7 +68,7 @@ def read_npz(npz_file):
 
 class CumuloDataset(Dataset):
 
-    def __init__(self, root_dir, ext="npz", label_preproc=get_most_frequent_label, normalizer=None, tiler=None):
+    def __init__(self, root_dir, ext="npz", normalizer=None, tiler=None, indices=None, label_preproc=get_most_frequent_label):
         
         self.root_dir = root_dir
         self.ext = ext
@@ -77,10 +77,13 @@ class CumuloDataset(Dataset):
             raise NotImplementedError("only .nc and .npz extensions are supported")
 
         self.file_paths = glob.glob(os.path.join(root_dir, "*." + ext))
-
+        
         if len(self.file_paths) == 0:
             raise FileNotFoundError("no {} files in {}".format(ext, root_dir))
-
+        
+        if indices is not None:
+            self.file_paths = [self.file_paths[i] for i in indices]
+        
         self.normalizer = normalizer
         self.label_preproc = label_preproc
         self.tiler = tiler
@@ -89,7 +92,13 @@ class CumuloDataset(Dataset):
 
         return len(self.file_paths)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, info):
+
+        if isinstance(info, tuple):
+            # load single tile
+            idx, tile_idx = info
+        else:
+            idx, tile_idx = info, None
 
         filename = self.file_paths[idx]
 
@@ -98,6 +107,9 @@ class CumuloDataset(Dataset):
 
         elif self.ext == "npz":
             radiances, properties, rois, labels = read_npz(filename)
+
+        if tile_idx is not None:
+            radiances, properties, rois, labels = radiances[tile_idx], properties[tile_idx], rois[tile_idx], labels[tile_idx]
 
         if self.normalizer is not None:
             radiances = self.normalizer(radiances)

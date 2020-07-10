@@ -43,18 +43,15 @@ def save_model(model, optimizer, train_cm, val_cm, save_dict, save_dir, **kwargs
 
     torch.save(state, os.path.join(save_dir, 'model.t7'))
 
-def get_idx_labeled_tiles(labels):
-    return labels > -1
-
 def get_init_batch(dataloader, batch_size):
     """
     gets a batch to use for init
     """
     batches = []
     for i, x in enumerate(dataloader):
-
-        batches.append(x["tiles"])
-
+        
+        _, tiles, *_ = x
+        batches.append(tiles)
         if i == (batch_size - 1):
             break
     
@@ -298,9 +295,6 @@ def minout_by_group(x, group_size, axis=-1):
     sort_dim = axis if axis == -1 else axis + 1
     return torch.min(x.view(*size), sort_dim)[0]
 
-def select_tiles(tiles, labeled_idx, max_tiles):
-    return torch.cat((tiles[labeled_idx], tiles[1-labeled_idx][:max_tiles - torch.sum(labeled_idx).item()]), dim=0)
-
 def batch_class_weights(labels, nb_classes):
     classes = np.unique(labels)
     weights = compute_class_weight("balanced", classes, labels)
@@ -312,7 +306,7 @@ def batch_class_weights(labels, nb_classes):
 
     return class_weights    
 
-def train(model, optimizer, epoch, lr, trainloader, unlab_trainloader, viz, train_log, class_weights, use_cuda=False, classification_weight=1, nb_classes=8):
+def train(model, optimizer, epoch, lr, trainloader, viz, train_log, class_weights, use_cuda=False, classification_weight=1, nb_classes=8):
 
     model.train()
 
@@ -324,35 +318,26 @@ def train(model, optimizer, epoch, lr, trainloader, unlab_trainloader, viz, trai
     conf_matrix = np.zeros((nb_classes, nb_classes))
     
     if use_cuda:
-        weights = class_weights.cuda()
+        class_weights = class_weights.cuda()
     
-    superv_criterion = nn.CrossEntropyLoss(weight=weights)
-    # unsuperv_criterion = nn.CrossEntropyLoss()
+    superv_criterion = nn.CrossEntropyLoss(weight=class_weights)
     
-    for batch_idx, (labelled_inputs, unlabelled_inputs) in enumerate(zip(trainloader, unlab_trainloader)):
+    for batch_idx, (_, inputs, *_, labels) in enumerate(trainloader):
         
         cur_iter = (epoch - 1) * len(trainloader) + batch_idx
 
-        # if first epoch use warmup
+        # if first epochs use warmup
         if epoch < 10:
             this_lr = lr * float(cur_iter) / (10 * len(trainloader))
             update_lr(optimizer, this_lr)
 
         optimizer.zero_grad()
         
-        inputs = torch.cat((labelled_inputs["tiles"], unlabelled_inputs["tiles"])).float()
-        inputs, labels = Variable(inputs, requires_grad=True), Variable(labelled_inputs["labels"].flatten().long())
-
-        all_labelled = len(labels)
-
         if use_cuda:
             inputs = inputs.cuda() # GPU settings
             labels = labels.cuda()
         
         logits, _, logpz, trace = model(inputs)  # Forward Propagation
-
-        labelled_logits = logits[:all_labelled]
-        unlabelled_logits = logits[all_labelled:]
 
         # compute loss
         logpx = logpz + trace
@@ -360,14 +345,10 @@ def train(model, optimizer, epoch, lr, trainloader, unlab_trainloader, viz, trai
         # apply on all the tiles
         loss = bits_per_dim(logpx, inputs).mean()
 
-        ones = torch.ones(len(unlabelled_logits)).long()
         if use_cuda:
             ones = ones.cuda()
 
-        lab_cross_entropy = superv_criterion(labelled_logits, labels)
-        #unlab_mean_entropy = unsuperv_criterion(unlabelled_logits, ones)
-        #mean_entropy = lab_cross_entropy + unlab_mean_entropy
-        mean_entropy = lab_cross_entropy
+        mean_entropy = superv_criterion(logits, labels.long())
 
         loss += classification_weight * mean_entropy
 
@@ -379,7 +360,7 @@ def train(model, optimizer, epoch, lr, trainloader, unlab_trainloader, viz, trai
         mean_trace = trace.mean().item()
         mean_logpz = logpz.mean().item()
 
-        _, predicted = torch.max(labelled_logits.data, 1)
+        _, predicted = torch.max(logits.data, 1)
         
         conf_matrix += confusion_matrix(labels.data.cpu().numpy(), predicted.cpu().numpy(), np.arange(nb_classes))
 
@@ -393,13 +374,11 @@ def train(model, optimizer, epoch, lr, trainloader, unlab_trainloader, viz, trai
         train_log.write("{}\n".format(json.dumps(log_dict)))
         train_log.flush()
 
-        del logpz, trace, logpx, loss, mean_trace, mean_entropy, lab_cross_entropy, mean_logpz, inputs, labels, predicted
-        # del unlabel_mean_entropy
+        del logpz, trace, logpx, loss, mean_trace, mean_entropy, mean_logpz, inputs, labels, predicted
         
     accuracy_per_class, f1_per_class = scores_per_class(conf_matrix)
 
     line_plot_per_dim(viz, "train accuracy", epoch, accuracy_per_class)
-    # line_plot_per_dim(viz, "train f1", epoch, f1_per_class)
 
     line_plot_mean(viz, "train accuracy", epoch, accuracy_per_class)
     line_plot_mean(viz, "train f1", epoch, f1_per_class)
@@ -425,10 +404,7 @@ def test(model, epoch, testloader, viz, test_log, use_cuda=False, flag="validati
     nb_tiles = 0.
 
     conf_matrix = np.zeros((nb_classes, nb_classes))
-
-    for batch_idx, inputs in enumerate(testloader):
-
-        inputs, labels = Variable(inputs["tiles"].float(), requires_grad=True), Variable(inputs["labels"].flatten().long())
+    for batch_idx, (inputs, labels) in enumerate(testloader):
         
         nb_tiles += len(labels)
 
@@ -442,7 +418,6 @@ def test(model, epoch, testloader, viz, test_log, use_cuda=False, flag="validati
         logpx = logpz + trace
         loss = bits_per_dim(logpx, inputs).mean()
 
-        # apply only to labelled tiles
         mean_entropy = criterion(logits, labels)
         loss += classification_weight * mean_entropy
 
