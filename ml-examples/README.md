@@ -23,7 +23,7 @@ variable_content = file.variables['variable_name'][:]
 
 ## CUMULO for Machine Learning
 
-Check out [load.py](load.py) for loading utils.
+Check out [load.py](loader.py) for loading utils.
 CUMULO's variables are categorized into:
 
 1. geographic coordinates
@@ -65,3 +65,33 @@ IMPORTANT:
 
 
 In [our work](https://arxiv.org/abs/1911.04227), we classified clouds by retaining for each pixel the most frequent label from *cloud_layer_type* but there could be better choices (e.g., using the distribution of labels for each pixel, or weighting labels by layer thickness).
+
+### Running Baselines
+
+#### Tile extraction
+The provided methods (iResNet and LightGBM) are applied on 3x3 tiles extracted from the whole images using the following script.
+
+``` bash
+python netcdf/nc_tile_extractor.py
+```
+
+Labeled tiles are sampled around each labeled pixel of an image and an equal amount of unlabeled tiles is sampled uniformly on the remaining cloudy portions of the image.
+
+#### ML Baselines
+
+##### LightGBM
+
+1. The jupyter notebook [training](https://github.com/FrontierDevelopmentLab/CUMULO/blob/master/ml-examples/lgbm.ipynb) provides the code for training a LightGBM model. See [doc](https://lightgbm.readthedocs.io/en/latest/Installation-Guide.html) for installation.
+
+2. The script [predicting](https://github.com/FrontierDevelopmentLab/CUMULO/blob/master/ml-examples/lightgbm_predict.py) provides the code for predicting over the whole swath using the trained model. 
+As the model takes as input 3x3 tiles, it is applied on the 2030x1354 swath sequentially and without overlappings.
+
+
+##### iResNet
+
+The provided code is an adaptation of [Invertible Residual Networks, ICML 2019](https://github.com/jhjacobsen/invertible-resnet). 
+
+1. The script [training](https://github.com/FrontierDevelopmentLab/CUMULO/blob/master/ml-examples/iresnet_training.py) provides the code for training a hybrid iResNet on CUMULO.
+
+1. The script [predicting](https://github.com/FrontierDevelopmentLab/CUMULO/blob/master/ml-examples/iresnet_predict.py) provides the code for predicting over the whole swath using the trained model. 
+As the model takes as input 3x3 tiles, it is applied on the 2030x1354 swath sequentially and without overlappings.
