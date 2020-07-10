@@ -32,7 +32,7 @@ def predict_and_save(save_dir, model_path, swath):
 
     save_path = os.path.join(save_dir, os.path.basename(filename)).replace(".nc", ".npy")
 
-    save_labels(labels, locations, rois, save_path)
+    save_labels(labels, locations, rois.squeeze(), save_path)
 
     print(save_path, "processed")
 
@@ -40,9 +40,9 @@ if __name__ == "__main__":
 
     import os
 
-    model_path = "../results/lgbm/lightgbm-model.txt"
+    model_path = "results/lgbm/lightgbm-model.txt"
     
-    save_dir = os.path.join("../results/lgbm/predicted-label-masks/")
+    save_dir = os.path.join("results/lgbm/predicted-label-masks/")
     make_directory(save_dir)
 
     tile_extr = TileExtractor()
