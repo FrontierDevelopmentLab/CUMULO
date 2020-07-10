@@ -1,15 +1,9 @@
-import glob
 import netCDF4 as nc4
 import numpy as np
 import os
-import pickle
-
-from skimage import io, transform
-from skimage.io import imread
-from skimage.util import crop
 
 import torch
-from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler
+from torch.utils.data import DataLoader, SubsetRandomSampler
 
 from src.loader import read_npz
 
