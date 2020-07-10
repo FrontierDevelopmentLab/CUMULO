@@ -7,12 +7,12 @@ def get_class_mask(labels, locations, cloud_mask):
 
     overlay = np.full(shape, np.nan)
     
-    for label, loc, mask in zip(labels, locations, cloud_mask):
-
+    for label, loc in zip(labels, locations):
         (x1, x2), (y1, y2) = loc
-        label[mask == 0] = np.nan
         overlay[x1:x2, y1:y2] = label
 
+    overlay[cloud_mask == 0] = np.nan
+    
     return overlay
 
 def save_labels(labels, locations, cloud_mask, save_file):

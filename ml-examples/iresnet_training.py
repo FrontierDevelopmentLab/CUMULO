@@ -1,5 +1,3 @@
-from datetime import date
-
 import os
 import random
 import sys
@@ -63,7 +61,7 @@ print("using GPUs?", use_cuda)
 
 classification_weight = in_shape[0] * in_shape[1] * in_shape[2]
 
-save_dir = os.path.join("results/iresnet", str(date.today()))
+save_dir = "results/iresnet"
 
 save_dir_best = os.path.join(save_dir, "best")
 save_dir_last = os.path.join(save_dir, "last")

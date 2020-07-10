@@ -28,7 +28,7 @@ def predict_tiles(model, tiles, use_cuda):
 
     if use_cuda:
         inputs = inputs.cuda()
-
+    
     logits, z, _, _ = model(inputs)
 
     labels = torch.argmax(logits.data, 1)
@@ -38,8 +38,8 @@ def predict_tiles(model, tiles, use_cuda):
 if __name__ == "__main__":
 
     data_dir = "../DATA/nc/"
-    model_dir = "../results/iresnet/best/"
-    save_dir = "../results/iresnet/best/"
+    model_dir = "results/iresnet/best/"
+    save_dir = "results/iresnet/best/"
 
     save_dir_labels = os.path.join(save_dir, "predicted-label-masks")
     make_directory(save_dir_labels)
@@ -78,8 +78,8 @@ if __name__ == "__main__":
         save_path_labels = os.path.join(save_dir_labels, base_npy)
         save_path_z = os.path.join(save_dir_z, base_npy)
         save_path_loc = os.path.join(save_dir_loc, base_npy)
-
-        save_labels(labels, locations, rois, save_path_labels)
+        
+        save_labels(labels, locations, rois.squeeze(), save_path_labels)
         np.save(save_path_z, z)
         np.save(save_path_loc, locations.astype(np.uint16))
 

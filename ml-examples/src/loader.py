@@ -120,7 +120,7 @@ class CumuloDataset(Dataset):
         if self.tiler is not None:
             tiles, locations = self.tiler(radiances)
 
-            return filename, radiances, locations, properties, rois, labels
+            return filename, tiles, locations, properties, rois, labels
 
         else:
             return filename, radiances, properties, rois, labels
