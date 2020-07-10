@@ -26,7 +26,7 @@ except:
 viz = visdom.Visdom(port=port, server="http://localhost")
 assert viz.check_connection(), "Could not connect to visdom"
 
-nb_epochs = 1
+nb_epochs = 100
 t_size = 3
 nb_classes = 8
 batch_size = 256 # number of tiles per batch 
@@ -161,9 +161,10 @@ try:
         epoch_time = time.time() - start_time
         elapsed_time += epoch_time
         print('| Elapsed time : %d:%02d:%02d' % (get_hms(elapsed_time)))
+        print('Training accuracy', train_acc)
  
         val_cm, val_acc = test(model, epoch, valloader, viz, val_log, use_cuda, "val ", classification_weight)
-        
+        print('Validation accuracy', val_acc)
         _, val_f1 = scores_per_class(val_cm)
         val_f1 = val_f1.mean()
         
