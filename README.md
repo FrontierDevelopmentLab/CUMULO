@@ -63,6 +63,9 @@ pip install satpy[modis_l1b]
 pip install -r requirements.txt
 ```
 
+## Machine Learning Baselines
+Examples for training models on CUMULO are provided [here](ml-examples/).
+
 ## Cite
 If you find this work useful, please cite the [original paper](https://arxiv.org/abs/1911.04227):
 

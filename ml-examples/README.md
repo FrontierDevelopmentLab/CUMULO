@@ -23,7 +23,7 @@ variable_content = file.variables['variable_name'][:]
 
 ## CUMULO for Machine Learning
 
-Check out [load.py](loader.py) for loading utils.
+Check out [loader.py](src/loader.py) for loading utils.
 CUMULO's variables are categorized into:
 
 1. geographic coordinates
@@ -81,9 +81,9 @@ Labeled tiles are sampled around each labeled pixel of an image and an equal amo
 
 ##### LightGBM
 
-1. The jupyter notebook [training](https://github.com/FrontierDevelopmentLab/CUMULO/blob/master/ml-examples/lgbm.ipynb) provides the code for training a LightGBM model. See [doc](https://lightgbm.readthedocs.io/en/latest/Installation-Guide.html) for installation.
+1. The jupyter notebook [training](lgbm.ipynb) provides the code for training a LightGBM model. See [doc](https://lightgbm.readthedocs.io/en/latest/Installation-Guide.html) for installation.
 
-2. The script [predicting](https://github.com/FrontierDevelopmentLab/CUMULO/blob/master/ml-examples/lightgbm_predict.py) provides the code for predicting over the whole swath using the trained model. 
+2. The script [predicting](lightgbm_predict.py) provides the code for predicting over the whole swath using the trained model. 
 As the model takes as input 3x3 tiles, it is applied on the 2030x1354 swath sequentially and without overlappings.
 
 
@@ -91,7 +91,7 @@ As the model takes as input 3x3 tiles, it is applied on the 2030x1354 swath sequ
 
 The provided code is an adaptation of [Invertible Residual Networks, ICML 2019](https://github.com/jhjacobsen/invertible-resnet). 
 
-1. The script [training](https://github.com/FrontierDevelopmentLab/CUMULO/blob/master/ml-examples/iresnet_training.py) provides the code for training a hybrid iResNet on CUMULO.
+1. The script [training](iresnet_training.py) provides the code for training a hybrid iResNet on CUMULO.
 
-1. The script [predicting](https://github.com/FrontierDevelopmentLab/CUMULO/blob/master/ml-examples/iresnet_predict.py) provides the code for predicting over the whole swath using the trained model. 
+1. The script [predicting](iresnet_predict.py) provides the code for predicting over the whole swath using the trained model. 
 As the model takes as input 3x3 tiles, it is applied on the 2030x1354 swath sequentially and without overlappings.
