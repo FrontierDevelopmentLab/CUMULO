@@ -9,7 +9,7 @@ the [Moderate Resolution Imaging Spectroradiometer (MODIS) from Aqua satellite](
 # Dataset
 
 The dataset is hosted [here](https://www.dropbox.com/sh/6gca7f0mb3b0ikz/AADq2lk4u7k961Qa31FwIDEpa?dl=0).
-It contains over 100k annotated multispectral images at 1km x 1km resolution, providing daily full coverage of the Earth for 2008. Years 2009 and 2016 are coming soon.
+It contains over 300k annotated multispectral images at 1km x 1km resolution, providing daily full coverage of the Earth for 2008, 2009 and 2016.
 
 ## Download
 
@@ -30,7 +30,7 @@ There is 1 NetCDF file per swath of 1354x2030 pixels, 1 every 5 minutes, named:
 filename = AYYYYDDD.HHMM.nc
 
 YYYY => year
-DDD => absolute day since 01.01.2008 
+DDD => absolute day since 01.01.YYYY 
 HH => hour of day
 MM => minutes    
 ```
