@@ -26,10 +26,8 @@ def get_class_occurrences(labels):
 
         values, counts = np.unique(lab, return_counts=True)
 
-        for v, c in zip(values, counts):
-            
-            if v > -1: # unlabeled pixels are marked with -1, ignore them
-                occ[v] = c
+        values, counts = values[values > -1], counts[values > -1] # unlabeled pixels are marked with -1, ignore them
+        occ[values] = counts
     
     return occurrences  
 
