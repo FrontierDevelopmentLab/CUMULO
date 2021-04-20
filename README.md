@@ -18,7 +18,7 @@ It contains over 300k annotated multispectral images at 1km x 1km resolution, pr
 2. use [rclone](https://rclone.org/dropbox/) for syncing it on your machine
 
 #### Option 2: direct download
-1. use one of these download [scripts](https://www.dropbox.com/sh/6gca7f0mb3b0ikz/AACJu8tYZpREqL704LZ2XVQ9a/CUMULO/download-scripts?dl=0&subfolder_nav_tracking=1)
+1. use one of these download [scripts](https://www.dropbox.com/sh/6gca7f0mb3b0ikz/AACRmgYpsWtw6qEa_JKD9Hp_a/CUMULO/download-scripts_2008?dl=0&subfolder_nav_tracking=1)
 
 ### File Format
 
