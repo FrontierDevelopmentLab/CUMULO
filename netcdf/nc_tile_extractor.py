@@ -2,6 +2,8 @@ import numpy as np
 import os
 import random
 
+from tqdm import tqdm
+
 MAX_WIDTH, MAX_HEIGHT = 1354, 2030
 
 # -------------------------------------------------------------------------------------------------- UTILS
@@ -124,12 +126,14 @@ def extract_cloudy_labelled_tiles(swath_tuple, cloud_mask, label_mask, tile_size
     :return: a 4-d array (nb_tiles, nb_channels, w, h) of sampled tiles; and a list of tuples ((w1, w2), (h1, h2)) with the relative positions of the extracted tiles withing the swath
     The script will use a cloud_mask channel to mask away all non-cloudy data and a label_mask channel to mask away all unlabelled data. The script will then select all tiles from the cloudy areas that are labelled.
     """
-
     # mask not to sample outside the swath
     allowed_pixels = get_sampling_mask((MAX_WIDTH, MAX_HEIGHT), tile_size)
 
     # combine the three masks, tile centers will be sampled from the cloudy and labelled pixels that are not in the borders of the swath
     labelled_pixels = allowed_pixels & cloud_mask & label_mask
+
+    assert labelled_pixels.sum() > 0, "Swath contains no valid labelled pixels."
+
     labelled_pixels_idx = np.where(labelled_pixels == 1)
     labelled_pixels_idx = list(zip(*labelled_pixels_idx))
 
@@ -182,8 +186,8 @@ if __name__ == "__main__":
 
     from nc_loader import read_nc
 
-    nc_dir = "../DATA/nc/"
-    save_dir = "../DATA/npz/"
+    nc_dir = "/mnt/disks/cumulo-tiles/nc/"
+    save_dir = "/mnt/disks/cumulo-tiles/npz/"
 
     for dr in [os.path.join(save_dir, "label"), os.path.join(save_dir, "unlabel")]:
         if not os.path.exists(dr):
@@ -194,17 +198,22 @@ if __name__ == "__main__":
     if len(file_paths) == 0:
         raise FileNotFoundError("no nc files in", nc_dir)
 
-    for filename in file_paths:
+    for filename in tqdm(file_paths):
 
         radiances, properties, cloud_mask, labels = read_nc(filename)
         label_mask = get_label_mask(labels)
+        
+        try:
+            labelled_tiles, unlabelled_tiles, labelled_positions, unlabelled_positions = sample_labelled_and_unlabelled_tiles((radiances, properties, cloud_mask, labels), cloud_mask[0], label_mask[0])
 
-        labelled_tiles, unlabelled_tiles, labelled_positions, unlabelled_positions = sample_labelled_and_unlabelled_tiles((radiances, properties, cloud_mask, labels), cloud_mask[0], label_mask[0])
+            name = os.path.basename(filename).replace(".nc", "")
 
-        name = os.path.basename(filename).replace(".nc", "")
+            save_name = os.path.join(save_dir, "label", name)
+            np.savez_compressed(save_name, radiances=labelled_tiles[0].data, properties=labelled_tiles[1].data, cloud_mask=labelled_tiles[2].data, labels=labelled_tiles[3].data, location=labelled_positions)
 
-        save_name = os.path.join(save_dir, "label", name)
-        np.savez_compressed(save_name, radiances=labelled_tiles[0].data, properties=labelled_tiles[1].data, cloud_mask=labelled_tiles[2].data, labels=labelled_tiles[3].data, location=labelled_positions)
+            save_name = os.path.join(save_dir, "unlabel", name)
+            np.savez_compressed(save_name, radiances=unlabelled_tiles[0].data, properties=unlabelled_tiles[1].data, cloud_mask=unlabelled_tiles[2].data, labels=unlabelled_tiles[3].data, location=unlabelled_positions)
 
-        save_name = os.path.join(save_dir, "unlabel", name)
-        np.savez_compressed(save_name, radiances=unlabelled_tiles[0].data, properties=unlabelled_tiles[1].data, cloud_mask=unlabelled_tiles[2].data, labels=unlabelled_tiles[3].data, location=unlabelled_positions)
+        except AssertionError as e:
+            print(filename, e)
+
