@@ -345,9 +345,6 @@ def train(model, optimizer, epoch, lr, trainloader, viz, train_log, class_weight
         # apply on all the tiles
         loss = bits_per_dim(logpx, inputs).mean()
 
-        if use_cuda:
-            ones = ones.cuda()
-
         mean_entropy = superv_criterion(logits, labels.long())
 
         loss += classification_weight * mean_entropy
@@ -362,7 +359,7 @@ def train(model, optimizer, epoch, lr, trainloader, viz, train_log, class_weight
 
         _, predicted = torch.max(logits.data, 1)
         
-        conf_matrix += confusion_matrix(labels.data.cpu().numpy(), predicted.cpu().numpy(), np.arange(nb_classes))
+        conf_matrix += confusion_matrix(labels.data.cpu().numpy(), predicted.cpu().numpy(), labels=np.arange(nb_classes))
 
         line_plot(viz, "loss", cur_iter, loss.item())
         line_plot(viz, "logp(z)", cur_iter, mean_logpz)
