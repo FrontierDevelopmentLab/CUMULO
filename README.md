@@ -14,11 +14,11 @@ It contains over 300k annotated multispectral images at 1km x 1km resolution, pr
 ## Download
 
 #### Option 1: syncing with your DropBox Account
-1. add [CUMULO](https://www.dropbox.com/sh/6gca7f0mb3b0ikz/AADq2lk4u7k961Qa31FwIDEpa?dl=0) to your DropBox account
+1. add [CUMULO](https://www.dropbox.com/sh/i3s9q2v2jjyk2it/AACxXnXfMF5wuIqLXqH4NJOra?dl=0) to your DropBox account
 2. use [rclone](https://rclone.org/dropbox/) for syncing it on your machine
 
-#### Option 2: direct download
-1. use one of these download [scripts](https://www.dropbox.com/sh/6gca7f0mb3b0ikz/AACRmgYpsWtw6qEa_JKD9Hp_a/CUMULO/download-scripts_2008?dl=0&subfolder_nav_tracking=1)
+#### Option 2: direct download -- DEPRECATED!
+1. use one of these download [scripts](https://www.dropbox.com/sh/i3s9q2v2jjyk2it/AADpo6AhMk7OgkB2yWHkM_E2a/download-scripts_2008?dl=0&subfolder_nav_tracking=1)
 
 ### File Format
 
@@ -73,7 +73,7 @@ If you find this work useful, please cite the [original paper](https://arxiv.org
 @article{zantedeschi2019cumulo,
         title={Cumulo: A Dataset for Learning Cloud Classes},
         author={Zantedeschi, Valentina and Falasca, Fabrizio and Douglas, Alyson and Strange, Richard and Kusner, Matt J and Watson-Parris, Duncan},
-        journal={arXiv preprint arXiv:1911.04227},
+        journal={Tackling Climate Change with Machine Learning Workshop, NeurIPS},
         year={2019}}
 ```
 
