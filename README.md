@@ -11,6 +11,8 @@ the [Moderate Resolution Imaging Spectroradiometer (MODIS) from Aqua satellite](
 The dataset is hosted [here](https://www.dropbox.com/sh/6gca7f0mb3b0ikz/AADq2lk4u7k961Qa31FwIDEpa?dl=0).
 It contains over 300k annotated multispectral images at 1km x 1km resolution, providing daily full coverage of the Earth for 2008, 2009 and 2016.
 
+<img width="1412" height="175" alt="Label for FDL Produts-01" src="https://github.com/user-attachments/assets/c16519ae-848b-4664-8d77-dbe7bac8a9d2" />
+
 ## Download
 
 #### Option 1: syncing with your DropBox Account
